@@ -13,5 +13,6 @@ end
 %print(h, '-painters', '-dpng', '-r900', [fullName '.png']);
 savefig(h,[fullName '.fig'],'compact') ;
 hgexport(h, [fullName '.png'], hgexport('factorystyle'), 'Format', 'png');
+plot2svg([fullName '.svg'], h);
 
 end

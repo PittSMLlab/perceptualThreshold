@@ -20,3 +20,7 @@ fig/old/
 *.enf
 
 *.prj
+
+src/modeling/sim/slprj/_jitprj/
+
+src/modeling/sim/\.SimulinkProject/
