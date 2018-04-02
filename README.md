@@ -8,5 +8,6 @@ Datlog to .csv conversion is done through the processDatlog.m file in the /data/
 First, add the /src/ folder to Matlab's path.
 Basic analysis can be performed through the accuracyPlots.m function, called with the tables stored in csv files. 
 Example: t=readtable('../data/AA01/Block1.csv'); accuracyPlots(t);
+To generate plots for all subjects, run genAccPlots.m
 
 
