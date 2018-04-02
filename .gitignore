@@ -16,3 +16,7 @@ src/sim/\.SimulinkProject/
 fig/old/
 
 *.m~
+
+*.enf
+
+*.prj
