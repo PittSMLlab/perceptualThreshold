@@ -111,7 +111,7 @@ scatter(abs(pp(pp<0)),-S(pp<0),20,cmap(1,:),'filled')
 
 %% Fifth: Reaction time vs. accuracy
 subplot(2,Q,5)
-M=50;
+M=min(20,round(size(trialData,1)/10));
 S=splitapply(@nanmedian,trialData.reactionTime,B);
 T=splitapply(@(x) (sum(x))/length(x),correctResponses,B);
 T(12)=NaN;
@@ -139,7 +139,7 @@ y=y(idx);
 y=conv(y,ones(M,1)/M,'same');
 y(1:floor(M/2))=NaN;
 y(end-ceil(M/2):end)=NaN;
-plot(x,y,'Color',cmap(1,:))
+plot(x,y,'Color',cmap(end,:))
 hold on
 rt=trialData.reactionTime(trialData.pertSize<0);
 [x,idx]=sort(rt,'ascend');
@@ -148,7 +148,7 @@ y=y(idx);
 y=conv(y,ones(M,1)/M,'same');
 y(1:floor(M/2))=NaN;
 y(end-ceil(M/2):end)=NaN;
-plot(x,y,'Color',cmap(end,:))
+plot(x,y,'Color',cmap(1,:))
 scatter(S,T,70,.4*ones(1,3),'filled')
 grid on
 set(gca,'XScale','log')

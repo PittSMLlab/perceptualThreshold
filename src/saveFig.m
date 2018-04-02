@@ -13,6 +13,7 @@ end
 %print(h, '-painters', '-dpng', '-r900', [fullName '.png']);
 savefig(h,[fullName '.fig'],'compact') ;
 hgexport(h, [fullName '.png'], hgexport('factorystyle'), 'Format', 'png');
-plot2svg([fullName '.svg'], h);
-
+%plot2svg([fullName '.svg'], h); -> Doesn't support scatter plot
+%hgexport(h,[fullName '.eps'], hgexport('factorystyle'), 'Format', 'eps');
+%hgexport(h,[fullName '.svg'], hgexport('factorystyle'), 'Format', 'svg');
 end
