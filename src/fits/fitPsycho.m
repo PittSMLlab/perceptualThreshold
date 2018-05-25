@@ -5,6 +5,9 @@ function [p,peval,L] = fitPsycho(x,y,mode)
 %Model:
 %p(y_i) = 1- 1/(1+exp((x_i-mu)/sigma))
 
+if nargin<3 || isempty(mode)
+    mode='MLE';
+end
 %Check: both x and y are column vectors:
 x=reshape(x,length(x),1);
 y=reshape(y,length(y),1);

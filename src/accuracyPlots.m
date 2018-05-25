@@ -23,6 +23,7 @@ d3=sum(correctResponses & (trialData.pertSize>0))/sum(trialData.pertSize>0);
 bar([d,dN])
 set(gca,'XTickLabel',{'OK','BAD','NR','NR all','Null'})
 ylabel('% of total responses')
+% Add error bars: (std)
 
 subplot(2,Q,1+Q)
 b=bar([d2,d(:,1),d3]');
@@ -30,6 +31,7 @@ set(gca,'XTickLabel',{'vL>vR','ALL','vR>vL'})
 ylabel('% CORRECT')
 aa=axis;
 axis([aa(1:2) .5 1])
+%Add error bars, add stat test
 
 %% Second plot: % <- choices as function of perturbation size
 subplot(2,Q,2)
@@ -38,7 +40,15 @@ scatter(pp,S,50,pp,'filled')
 grid on
 ylabel('% ''<-'' (left is slow) responses') 
 xlabel('vL>vR     PERTURBATION (mm/s)      vL<vR')
-%TODO: add std
+%TODO: add error shaded area (std)
+axis([-400 400 0 1])
+
+%Add fits:
+hold on
+y=monoLS(S);
+plot(pp,y,'k')
+[z,peval,L] = fitPsycho(trialData.pertSize,trialData.initialResponse==-1 + .5*isnan(trialData.initialResponse)); %MLE fit
+plot(pp,unique(peval),'r')
 
 subplot(2,Q,2+Q)
 B2=findgroups(abs(trialData.pertSize)); %pertSize>0 means vR>vL
@@ -97,6 +107,9 @@ ylabel('Final speed (mm/s)')
 xlabel('vL>vR      PERTURBATION         vL<vR')
 legend({'Indiv. trials','Median'},'Location','NorthWest')
 axis([-360 360 -150 150])
+hold on
+y=monoLS(S4);
+plot(pp,y,'k')
 
 subplot(2,Q,3+Q)
 S=splitapply(@nanmedian,trialData.lastSpeedDiff,B); 
@@ -117,10 +130,13 @@ T=splitapply(@(x) (sum(x))/length(x),correctResponses,B);
 T(12)=NaN;
 [x,idx]=sort(trialData.reactionTime,'ascend');
 y=correctResponses(idx);
+y2=monoLS(y(~isnan(x)));
+plot(x(~isnan(x)),y2,'k')
+axis([.5 10 .4 1])
 y=conv(y,ones(M,1)/M,'same');
 y(1:floor(M/2))=NaN;
 y(end-ceil(M/2):end)=NaN;
-plot(x,y,'k')
+%plot(x,y,'k')
 hold on
 scatter(S,T,70,pp,'filled')
 grid on
@@ -132,29 +148,41 @@ subplot(2,Q,5+Q)
 S=splitapply(@nanmedian,trialData.reactionTime,B2);
 T=splitapply(@(x) (sum(x))/length(x),correctResponses,B2);
 T(1)=NaN;
+%Postivie:
 rt=trialData.reactionTime(trialData.pertSize>0);
 [x,idx]=sort(rt,'ascend');
 y=correctResponses(trialData.pertSize>0);
 y=y(idx);
+y2=monoLS(y(~isnan(x)));
 y=conv(y,ones(M,1)/M,'same');
 y(1:floor(M/2))=NaN;
 y(end-ceil(M/2):end)=NaN;
-plot(x,y,'Color',cmap(end,:))
+%plot(x,y,'Color',cmap(end,:))
+plot(x(~isnan(x)),y2,'Color',cmap(end,:))
 hold on
+%Negative:
 rt=trialData.reactionTime(trialData.pertSize<0);
 [x,idx]=sort(rt,'ascend');
 y=correctResponses(trialData.pertSize<0);
 y=y(idx);
+y2=monoLS(y(~isnan(x)));
 y=conv(y,ones(M,1)/M,'same');
 y(1:floor(M/2))=NaN;
 y(end-ceil(M/2):end)=NaN;
-plot(x,y,'Color',cmap(1,:))
+%plot(x,y,'Color',cmap(1,:))
+plot(x(~isnan(x)),y2,'Color',cmap(1,:))
+%All:
 scatter(S,T,70,.4*ones(1,3),'filled')
 grid on
 set(gca,'XScale','log')
 xlabel('Reaction log-time (s)')
 ylabel('% CORRECT')
-
+hold on
+[x,i]=sort(trialData.reactionTime);
+y=correctResponses(i);
+y2=monoLS(y(~isnan(x)));
+plot(x(~isnan(x)),y2,'k')
+axis([.5 10 .4 1])
 %% Sixth plot: clicking rates
 subplot(2,Q,6)
 fun=@nanmean;

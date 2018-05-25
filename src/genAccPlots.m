@@ -24,9 +24,9 @@ for j=1:9 %All subjects
            exit=true;
        end
    end
-    fh=accuracyPlots(superT);
-    fh.Name=['Accuracy for subject AA0' num2str(j)];
-    saveFig(fh,figDir1,['accuracyAA0' num2str(j)],0)
+    %fh=accuracyPlots(superT);
+    %fh.Name=['Accuracy for subject AA0' num2str(j)];
+    %saveFig(fh,figDir1,['accuracyAA0' num2str(j)],0)
     if j==1
         superSuperT=superT;
     else
@@ -34,7 +34,7 @@ for j=1:9 %All subjects
     end
 end
     fh=accuracyPlots(superSuperT);
-    saveFig(fh,'../fig/all/',['accuracyAll'],0)
+    %saveFig(fh,'../fig/all/',['accuracyAll'],0)
 %% Block 1 vs. block 2 accuracy, and block 2 vs. block 3 accuracy (when present)
 %This (loosely) compares history before perturbation as a factor in performance
 

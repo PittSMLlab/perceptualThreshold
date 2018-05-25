@@ -1,5 +1,5 @@
 function [trialData,strideData]=datlogSummarize(datlog)
-
+goodOnly=0;
 %% Parse datlog to get HS, profiles, sent speeds
 vRsent=datlog.TreadmillCommands.sent(:,1);
 vLsent=datlog.TreadmillCommands.sent(:,2);
