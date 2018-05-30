@@ -4,6 +4,7 @@ addpath(genpath('./'));
 %%
 baseDir='../data/AA0';
 figDir='../fig/AA0';
+    subID=[];
 for j=1:9 %All subjects
     exit=false;
     blockNo=0;
@@ -12,17 +13,29 @@ for j=1:9 %All subjects
    while ~exit 
        blockNo=blockNo+1;
        try
-          t=readtable([subDir 'Block' num2str(blockNo) '.csv']); 
+          t=readtable([subDir 'Block' num2str(blockNo) '.csv']);
+          %if blockNo==3 %To drop block 3 from subjects with odd number of blocks
+          %    try %Try loading block 4, if fails (no block 4), dont use block 3 either
+          %        t4=readtable([subDir 'Block' num2str(blockNo+1) '.csv']);
+          %    catch
+          %        exit=true;
+          %        break
+          %    end
+          %end
+       catch %Went trhough all blocks for this sub
+           exit=true;
+           break
+       end
           %fh=accuracyPlots(t);
           %saveFig(fh,subDir,['accBlock' num2str(blockNo)],0)
+          taux=table(j.*ones(size(t.date,1),1), blockNo*ones(size(t.date,1),1),'VariableNames',{'subID','blockNo'});
+          t=cat(2,t,taux);
           if blockNo==1
               superT=t;
           else
              superT=cat(1,superT,t);
           end
-       catch %Went through ALL blocks for this subject
-           exit=true;
-       end
+
    end
     %fh=accuracyPlots(superT);
     %fh.Name=['Accuracy for subject AA0' num2str(j)];
@@ -33,12 +46,5 @@ for j=1:9 %All subjects
         superSuperT=cat(1,superSuperT,superT);
     end
 end
-    fh=accuracyPlots(superSuperT);
-    %saveFig(fh,'../fig/all/',['accuracyAll'],0)
-%% Block 1 vs. block 2 accuracy, and block 2 vs. block 3 accuracy (when present)
-%This (loosely) compares history before perturbation as a factor in performance
-
-%% Block 1 vs block 3, and block 2 vs block 4 accuracy (when present)
-%This assesses learning in the task
-
-%% Dominance effects? Separate based on handedness? (footedness is R for all subjects)
+fh=accPlots(superSuperT);
+saveFig(fh,'../fig/all/',['accuracyAll'],0)
