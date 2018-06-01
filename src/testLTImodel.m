@@ -22,7 +22,7 @@ pp=unique(matSpeeds(:,1));
 cmap=parula(length(pp)); %parula, jet, redbluecmap
 cmap=cmap*.8;
 figure
-m=splitapply(fun,matSpeeds./sign(matSpeeds(:,1)),findgroups(matSpeeds(:,1)));
+m=splitapply(fun,matSpeeds./sign(matSpeeds(:,1)),findgroups(abs(matSpeeds(:,1))));
 figure
 subplot(3,1,1)
 hold on
