@@ -14,14 +14,14 @@ for j=1:9 %All subjects
        blockNo=blockNo+1;
        try
           t=readtable([subDir 'Block' num2str(blockNo) '.csv']);
-          %if blockNo==3 %To drop block 3 from subjects with odd number of blocks
-          %    try %Try loading block 4, if fails (no block 4), dont use block 3 either
-          %        t4=readtable([subDir 'Block' num2str(blockNo+1) '.csv']);
-          %    catch
-          %        exit=true;
-          %        break
-          %    end
-          %end
+          if false %blockNo==3 %To drop block 3 from subjects with odd number of blocks
+              try %Try loading block 4, if fails (no block 4), dont use block 3 either
+                  t4=readtable([subDir 'Block' num2str(blockNo+1) '.csv']);
+              catch
+                  exit=true;
+                  break
+              end
+          end
        catch %Went trhough all blocks for this sub
            exit=true;
            break
@@ -46,5 +46,14 @@ for j=1:9 %All subjects
         superSuperT=cat(1,superSuperT,superT);
     end
 end
+%%
 fh=accPlots(superSuperT);
 saveFig(fh,'../fig/all/',['accuracyAll'],0)
+%%
+
+fh=rtPlots(superSuperT);
+saveFig(fh,'../fig/all/',['rtAll'],0)
+
+%%
+fh=ssPlots(superSuperT);
+saveFig(fh,'../fig/all/',['ssAll'],0)

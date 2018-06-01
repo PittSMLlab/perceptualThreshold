@@ -155,26 +155,55 @@ title('Subject effect')
 %Block effect
 %pert-size effect 
 %Prev pert-size effect
-X=trialData(:,{'pertSize'});
-X.blockNo=trialData.blockNo;
-X.subID=nominal(trialData.subID);
-X.prevSize=[nan;trialData.pertSize(1:end-1)]; %Need to fix so first trial of each block has nan
-X.absSize=abs(trialData.pertSize);
-X.leftResponse=trialData.initialResponse==-1;
-X.lastSpeedDiff=[nan;trialData.lastSpeedDiff(1:end-1)];
-X=X(~isnan(trialData.initialResponse) & trialData.pertSize~=-250*((-1).^trialData.blockNo),:); %Removing null responses, and first trial of block (+250 in even blocks, -250 in odd)
-mm=fitglm(X,'leftResponse~subID+pertSize+prevSize+blockNo+lastSpeedDiff','Distribution','binomial') %Logisitc regression
-X=trialData(:,{'pertSize'});
-X.blockNo=trialData.blockNo;
-X.subID=nominal(trialData.subID);
-X.prevSize=[nan;trialData.pertSize(1:end-1)]; %Need to fix so first trial of each block has nan
-X.absSize=abs(trialData.pertSize);
-X.leftResponse=trialData.initialResponse==-1;
-X.lastSpeedDiff=[nan;trialData.lastSpeedDiff(1:end-1)];
-X=X(~isnan(trialData.initialResponse) & trialData.subID~=2 & trialData.pertSize~=-250*((-1).^trialData.blockNo),:); %Removing subj 2 additionally
-mm2=fitglm(X,'leftResponse~pertSize+prevSize','Distribution','binomial') %Drop block No, lastSpeedDiff & subID (non-sig), interaction is non-sig
+
+%Adding prev perturbation to table:
+trialData.prevSize=[0;trialData.pertSize(1:end-1)]; 
+trialData.prevSize(trialData.pertSize==-250*((-1).^trialData.blockNo))=0; %Assigning NaN to previous perturbation for first trial in each block (+250 in even blocks, -250 in odd)
+trialData.lastSpeedDiff=[0;trialData.lastSpeedDiff(1:end-1)];
+trialData.lastSpeedDiff(trialData.pertSize==-250*((-1).^trialData.blockNo))=0; %Assigning NaN to previous perturbation for first trial in each block (+250 in even blocks, -250 in odd)
+
+%Creating binary response variable(s):
+trialData.leftResponse=trialData.initialResponse==-1;
+trialData.rightResponse=trialData.initialResponse==1;
+trialData.noResponse=isnan(trialData.initialResponse);
+
+%Creating a (modified) subject ID field: %See comment at end about ANOVA
+aux=trialData.subID;
+aux(aux==1)=10;
+aux(aux==4)=1;
+trialData.ID=categorical(aux);
+
+%
+%trialData.blockNo=categorical(trialData.blockNo);
+
+%X=X(~isnan(trialData.initialResponse) & trialData.pertSize~=-250*((-1).^trialData.blockNo),:); %Removing null responses, and first trial of block (+250 in even blocks, -250 in odd)
+X=trialData(~trialData.noResponse,:);
+mm=fitglm(X,'leftResponse~ID*pertSize+pertSize*prevSize+blockNo*pertSize+lastSpeedDiff','Distribution','binomial'); %Logisitc regression, excluding null responses
+%X=trialData(:,{'pertSize'});
+%X.blockNo=trialData.blockNo;
+%X.subID=nominal(trialData.subID);
+%X.prevSize=[nan;trialData.pertSize(1:end-1)]; %Need to fix so first trial of each block has nan
+%X.absSize=abs(trialData.pertSize);
+%X.leftResponse=trialData.initialResponse==-1;
+%X.lastSpeedDiff=[nan;trialData.lastSpeedDiff(1:end-1)];
+%X=X(~isnan(trialData.initialResponse) & trialData.subID~=2 & trialData.pertSize~=-250*((-1).^trialData.blockNo),:); 
+
+%No subj model:
+mm1=fitglm(X,'leftResponse~pertSize*prevSize+lastSpeedDiff+blockNo*pertSize','Distribution','binomial');
+%Reduced model removing subj 2:
+mm2=fitglm(trialData(~trialData.noResponse & trialData.ID~=trialData.ID(find(trialData.subID==2,1,'first')),:),'leftResponse~pertSize*prevSize+lastSpeedDiff+blockNo*pertSize','Distribution','binomial');
+mm3=fitglm(trialData(~trialData.noResponse & trialData.ID~=trialData.ID(find(trialData.subID==2,1,'first')),:),'leftResponse~pertSize+prevSize-1','Distribution','binomial'); %Dropping non-sig terms
 subplot(2,Q,4:5)
 hold on
 mm2.plotPartialDependence('pertSize')
-text(-400,-.6,evalc('mm.disp'),'FontSize',6,'Clipping','off')
-text(-400,-1.4,evalc('mm2.disp'),'FontSize',6,'Clipping','off')
+text(500,-.8,removeTags(evalc('mm.disp')),'FontSize',6,'Clipping','off')
+text(-500,-.4,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
+text(-500,-1,regexprep(removeTags(evalc('mm2.disp')),'model:\n','model: (no subj 2)\n'),'FontSize',6,'Clipping','off')
+text(-500,-1.5,regexprep(removeTags(evalc('mm3.disp')),'model:\n','model: (no subj 2)\n'),'FontSize',6,'Clipping','off')
+
+%text(-400,-1.4,removeTags(evalc('mm.anova')),'FontSize',6,'Clipping','off')
+%I'd like to do something like an anova to find out which subjects are
+%significantly different from the mean, in either bias or slope, but could
+%find no way to do this in Matlab. I settle for setting the 'most average'
+%subject as a reference (subject 1) and comparing everyone to him/her
+

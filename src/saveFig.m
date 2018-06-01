@@ -12,7 +12,7 @@ end
 %set(h,'Color','None')
 %print(h, '-painters', '-dpng', '-r900', [fullName '.png']);
 %savefig(h,[fullName '.fig'],'compact') ;
-%hgexport(h, [fullName '.png'], hgexport('factorystyle'), 'Format', 'png');
+hgexport(h, [fullName '.png'], hgexport('factorystyle'), 'Format', 'png');
 hgexport(h,[fullName '.eps'], hgexport('factorystyle'), 'Format', 'eps');
 %hgexport(h,[fullName '.svg'], hgexport('factorystyle'), 'Format', 'svg');
 end
