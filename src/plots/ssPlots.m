@@ -101,7 +101,7 @@ trialData.ID=categorical(aux);
 trialData.netClicks=trialData.Lclicks-trialData.Rclicks;
 trialData.absNetClicks=trialData.netClicks .* sign(trialData.pertSize+1e-4);
 trialData.logNetClicks=sign(trialData.netClicks).*log(abs(trialData.netClicks));
-trialData.logPertSize=sign(trialData.pertSize).*log(abs(trialData.pertSize)+1e-9);
+trialData.sqrtPertSize=sign(trialData.pertSize).*sqrt(abs(trialData.pertSize)+1e-9);
 %
 trialData.incorrectResponse=~trialData.correctResponse;
 trialData.missingClicks=trialData.pertSize/7 -trialData.netClicks;
@@ -126,11 +126,18 @@ text(400,-55,removeTags(evalc('mm3.disp')),'FontSize',9,'Clipping','off')
 %X=trialData(trialData.correctResponse,:);
 mm=fitlm(X,'lastSpeedDiff~pertSize+incorrectResponse:pertSize-1')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 text(-400,-30,removeTags(evalc('mm.disp')),'FontSize',9,'Clipping','off')
+%mm=fitglm(X,'lastSpeedDiff~pertSize','Distribution','normal','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
+%text(-400,-55,removeTags(evalc('mm.disp')),'FontSize',9,'Clipping','off')
 
 %X=trialData(trialData.correctResponse,:);
 mm=fitlm(X,'lastSpeedDiff~pertSize+incorrectResponse:pertSize+pertSize*ID')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 text(-1400,-45,regexprep(removeTags(evalc('mm.disp')),'model:\n','model: \n'),'FontSize',9,'Clipping','off')
 %mm1=fitlm(X,'lastSpeedDiff~pertSize');%,'Distribution','normal','Link','logit','DispersionFlag',true); %Logisitc regression, excluding null responses
 %text(-1180,-60,removeTags(evalc('mm1.disp')),'FontSize',9,'Clipping','off')
+
+subplot(2,Q,1:2)
+hold on
+mm=fitlm(X,'lastSpeedDiff~pertSize')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
+plot([-350 0 350],[-350 0 350]*mm.Coefficients.Estimate(2),'r','DisplayName','Best LM fit')
 end
 

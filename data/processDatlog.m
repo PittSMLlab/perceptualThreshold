@@ -21,7 +21,7 @@ profile{2}{4}=['../data/AA02/20160920T195216_threshProfile_300816opp.mat'];
 
 profile{3}{1}=['../data/AA03/20160922T191249_threshProfile_300816.mat'];
 profile{3}{2}=['../data/AA03/20160922T194458_threshProfile_300816opp.mat'];
-%profile{3}{3}=['../data/AA03/20160922T201415_threshProfile_300816.mat'];
+profile{3}{3}=['../data/AA03/20160922T201415_threshProfile_300816.mat'];
 
 profile{4}{1}=['../data/AA04/20161004T185906_threshProfile_300816.mat'];
 profile{4}{2}=['../data/AA04/20161004T192712_threshProfile_300816opp.mat'];
@@ -48,7 +48,7 @@ profile{8}{4}=['../data/AA08/20180319T173454_threshProfile_300816opp.mat'];
 
 profile{9}{1}=['../data/AA09/20180321T132152_threshProfile_300816.mat'];
 profile{9}{2}=['../data/AA09/20180321T134649_threshProfile_300816opp.mat'];
-%profile{9}{3}=['../data/AA09/20180321T141011_threshProfile_300816.mat'];
+profile{9}{3}=['../data/AA09/20180321T141011_threshProfile_300816.mat'];
 
 %% Process each block, generate tables, save as csv
 for i=1:length(profile)

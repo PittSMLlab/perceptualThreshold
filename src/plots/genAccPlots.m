@@ -56,4 +56,4 @@ saveFig(fh,'../fig/all/',['rtAll'],0)
 
 %%
 fh=ssPlots(superSuperT);
-saveFig(fh,'../fig/all/',['ssAll'],0)
+%saveFig(fh,'../fig/all/',['ssAll'],0)

@@ -205,6 +205,7 @@ strideData.Lclicks=accumLresponses(:,:)';
 strideData.Rclicks=accumRresponses(:,:)';
 strideData.initialClick=firstResponse(:,:)';
 strideData.timeToFirstClick=responseTime(:,:)';
+strideData.speedDiff=vD(:,:)';
 %strideData=cat(3,startTime,endTime,Lclicks,Rclicks,initialClick,timeToFirstClick);
 
 
