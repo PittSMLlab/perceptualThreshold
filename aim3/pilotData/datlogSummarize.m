@@ -66,6 +66,7 @@ isItRpress=pressedKeys==1;
 reactionTime=nan(size(inds));
 reactionStride=nan(size(inds));
 pertSize=vD(inds);
+changeSize=vD(inds)-vD(inds-3);
 pertSign=sign(pertSize);
 reactionSign=nan(size(inds)); %Positive if vR>vL
 accurateReaction=nan(size(inds));
@@ -190,7 +191,7 @@ speedRactual=vR;
 speedLactual=vL;
 lastSpeedDiff=vD(end,:)';
 date=date*ones(size(startTime));
-trialData=table(date,startTime,endTime,pertSize,reactionTime,reactionStride,initialResponse,Lclicks,Rclicks,lastSpeedDiff);
+trialData=table(date,startTime,endTime,pertSize,reactionTime,reactionStride,initialResponse,Lclicks,Rclicks,lastSpeedDiff,changeSize);
 
 %% Returns a tensor of Ntrials x 25 strides x M fields, containing:
 %startTime,endTime,Lclicks,Rclicks, initialClick, timeToFirstClick,

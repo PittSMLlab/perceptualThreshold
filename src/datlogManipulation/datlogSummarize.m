@@ -111,6 +111,7 @@ end
     reactionTime=reactionTime(mask==1);
     reactionStride=reactionStride(mask==1);
     pertSize=vD(inds);
+    changeSize=vD(inds)-vD(inds-2);
     pertSign=pertSign(mask==1);
     reactionSign=reactionSign(mask==1); %Positive if vR>vL
     accurateReaction=accurateReaction(mask==1);
@@ -194,7 +195,7 @@ speedRactual=vR;
 speedLactual=vL;
 lastSpeedDiff=vD(end,:)';
 date=date*ones(size(startTime));
-trialData=table(date,startTime,endTime,pertSize,reactionTime,reactionStride,initialResponse,Lclicks,Rclicks,lastSpeedDiff);
+trialData=table(date,startTime,endTime,pertSize,reactionTime,reactionStride,initialResponse,Lclicks,Rclicks,lastSpeedDiff,changeSize);
 
 %% Returns a tensor of Ntrials x 25 strides x M fields, containing:
 %startTime,endTime,Lclicks,Rclicks, initialClick, timeToFirstClick,

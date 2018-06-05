@@ -4,6 +4,7 @@ clear filename
 %Pilot 3:
 filename{1}='20180409T155049_PerceptualDynamics_Adaptation.mat';
 filename{2}='20180409T161056_PerceptualDynamics_PostAdaptation.mat';
+filename(2)=[];
 
 %Pilot 2:
 %filename{1}='20180404T145759_PerceptualDynamics_Adaptation.mat';
@@ -44,9 +45,11 @@ for i=1:length(pp)
     y2=trialData.lastSpeedDiff(trialData.pertSize==pp(i));
     x1=trialData.startTime(trialData.pertSize==pp(i));
     x2=trialData.endTime(trialData.pertSize==pp(i));
+    y3=trialData.changeSize(trialData.pertSize==pp(i));
     
-    s1=scatter(x2+t0,y2,50,'filled','DisplayName','Task init');
-    s2=scatter(x1+t0,y1,50,'MarkerEdgeColor',s1.CData,'DisplayName', 'Task end');
+    s1=scatter(x2+t0,y2,50,'filled','DisplayName','Task end');
+    s2=scatter(x1+t0,y1,50,'MarkerEdgeColor',s1.CData,'DisplayName', 'Task init');
+    %s3=scatter(x2+t0,y2-y3,50,s1.CData,'filled','MarkerEdgeColor','k','DisplayName', 'Projected');
     %plot(x2,y2,'Color',s1.CData)
     %plot([x1 x2]',[y1 y2]','k')
     xlabel('Time (s)')

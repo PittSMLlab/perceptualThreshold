@@ -1,5 +1,5 @@
 %% load empirical data for comparison
-%loadAllDataIntoTable
+loadAllDataIntoTable
 %% Simulate random walk threshold times
 N=30; %Simulation steps
 s=.62;
@@ -28,14 +28,14 @@ end
 
 %%
 figure
-subplot(2,2,1)
+subplot(2,3,1)
 for j=1:P
 histogram(t(:,j),'Normalization','probability','EdgeColor','none','FaceAlpha',.2)
 hold on
 end
 title('Simulated')
 axis([0 15 0 .5])
-subplot(2,2,2)
+subplot(2,3,2)
 for j=1:P
         dataT=superSuperT(superSuperT.pertSize==drifts(j) | superSuperT.pertSize==-drifts(j),:);
         histogram(dataT.reactionStride,'Normalization','probability','EdgeColor','none','FaceAlpha',.2)
@@ -51,7 +51,7 @@ axis([0 15 0 .5])
 %x=[.01:.01:N];
 %plot(x,1.8*sqrt(c/(2*pi))*exp(-c./(2*(x-mu)))./(x-mu).^(3/2))
 
-subplot(2,2,4)
+subplot(2,3,5)
 title('End time')
 plot(drifts,nanmean(t,1),'LineWidth',2,'DisplayName','Mean')
 hold on
@@ -63,10 +63,16 @@ xlabel('Perturbation (mm/s)')
 ylabel('Reaction stride (s)')
 legend
 
-subplot(2,2,3)
+subplot(2,3,4)
 plot(drifts,mean(correct),'LineWidth',2,'DisplayName','Model')
 hold on
 plot(drifts,mean(empAcc,2),'o','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
 grid on
 title('Accuracy')
 ylabel('Correct decisions')
+
+subplot(2,3,6)
+plot(empMeanRS,mean(empAcc,2),'o','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
+hold on
+plot(nanmean(t,1),mean(correct))
+title('Acc vs RT')
