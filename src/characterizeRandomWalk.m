@@ -1,8 +1,8 @@
 %% Simulate random walk threshold times
-N=20; %Simulation steps
-th=1; %Threshold, arbitrary scale
+N=30; %Simulation steps
+th=1.5; %Threshold, arbitrary scale
 M=1e4; %Number of simulations for each parameter pair
-drifts=[0:.2:1];
+drifts=[0:.1:1];
 noises=[.2:.2:2]; %Variance of noise
 Q=length(noises); 
 P=length(drifts);
@@ -121,7 +121,7 @@ title('Non-response rate')
 
 
 subplot(2,5,4)
-set(gca,'ColorOrder',cc);
+set(gca,'ColorOrder',[cc;cc;get(gca,'ColorOrder');]);
     hold on
 plot(drifts,correctedRate(:,1:end),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))])
 %plot(drifts,correctRate(:,1:end),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))])
@@ -132,7 +132,7 @@ grid on
 title('Accuracy')
 ylabel('Correct decisions')
 
-subplot(2,5,9)
+%subplot(2,5,9)
 %set(gca,'ColorOrder',cc);
 ppp=[];
     hold on
@@ -148,16 +148,14 @@ ppp=[];
 
 hold on
 grid on
-title('Accuracy')
-ylabel('Correct decisions')
-legend(ppp)
+legend(ppp,'Location','SouthEast')
 
 subplot(2,5,5)
 set(gca,'ColorOrder',cc);
 hold on
 for l=1:2:Q
     hold on
-    plot(nanmean(endTime(:,:,l),1),correctedRate(:,l),'o','LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))])
+    plot(nanmean(endTime(:,:,l),1),correctedRate(:,l),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))])
 end
 title('Acc vs RT')
 ylabel('Accuracy (%)')
