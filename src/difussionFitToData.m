@@ -29,7 +29,7 @@ f=nanmedian(driftRate./abs(pSize));
 %[pp]=polyfit(empMeanRS(2:end)',mean(empAcc(2:end,:),2)-1),1);
 %% Define diffusion model and simulate:
 N=3e4; %Simulation steps
-th=a/3; %Threshold, arbitrary scale
+th=a/2; %Threshold, arbitrary scale
 M=2e3; %Number of simulations for each parameter pair
 drifts=[0,.05,.1,.2,.4,.8,1];
 noises=1;
@@ -47,7 +47,7 @@ for l=1:Q
             x=zeros(N,1);
             for i=2:N
                 x(i)=x(i-1)+m*clockStep+s*randn*sqrt(clockStep);
-                if abs(x(i))>=th*(1+(.4*i*clockStep)).^.5
+                if abs(x(i))>=th%*(min(1-(.08*i*clockStep),.3))
                     endTime(k,j,l)=(i)*clockStep;
                     correctResponse(k,j,l)=x(i)>0;
                     %correctRate(j,l)=correctRate(j,l)+(x(i)>0)/M;
