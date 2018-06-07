@@ -5,17 +5,28 @@
 loadAllDataIntoTable
 pSize=[0 10 25 50 75 100 125 150 200 250 300 350];
 P=length(pSize);
-for j=1:P
-        dataT=superSuperT(superSuperT.pertSize==pSize(j) | superSuperT.pertSize==-pSize(j),:);
-        empAcc(j,:)=sign(dataT.initialResponse)==-sign(dataT.pertSize);
-        empMeanRS(j)=nanmean(dataT.reactionStride);
-        empStdRS(j)=nanstd(dataT.reactionStride);
-        empMeanRS(j)=nanmean(dataT.reactionTime);
-        empStdRS(j)=nanstd(dataT.reactionTime);
-end
 superSuperT.correctResponse=sign(superSuperT.initialResponse)==-sign(superSuperT.pertSize);
 superSuperT.noResponse=isnan(superSuperT.reactionTime);
 superSuperT.pertSize=abs(superSuperT.pertSize);
+empMeanRS=nan(P,1);
+empStdRS=nan(P,1);
+empCorrectMeanRS=nan(P,1);
+empCorrectStdRS=nan(P,1);
+empIncorrectMeanRS=nan(P,1);
+empIncorrectStdRS=nan(P,1);
+for j=1:P
+        dataT=superSuperT(superSuperT.pertSize==pSize(j) | superSuperT.pertSize==-pSize(j),:);
+        empAcc(j,:)=dataT.correctResponse;
+        %empMeanRS(j)=nanmean(dataT.reactionStride);
+        %empStdRS(j)=nanstd(dataT.reactionStride);
+        empMeanRS(j)=nanmean(dataT.reactionTime);
+        empStdRS(j)=nanstd(dataT.reactionTime);
+        empCorrectMeanRS(j)=nanmean(dataT.reactionTime(dataT.correctResponse));
+        empCorrectStdRS(j)=nanstd(dataT.reactionTime(dataT.correctResponse));
+        empIncorrectMeanRS(j)=nanmean(dataT.reactionTime(~dataT.correctResponse));
+        empIncorrectStdRS(j)=nanstd(dataT.reactionTime(~dataT.correctResponse));
+end
+
 [pSize,driftRate,threshold,delay]=fitEZ(superSuperT);
 a=median(threshold);
 f=nanmedian(driftRate./abs(pSize));
@@ -39,6 +50,8 @@ P=length(drifts);
 correctResponse=false(M,P,Q);
 endTime=nan(M,P,Q);
 clockStep=.001;
+thresholdCurve=th*ones(1,N);
+%thresholdCurve=1.1*th*(1+(2*[1:N]/N).^.5);
 for l=1:Q
     s=sqrt(noises(l));
     for j=1:P
@@ -47,7 +60,7 @@ for l=1:Q
             x=zeros(N,1);
             for i=2:N
                 x(i)=x(i-1)+m*clockStep+s*randn*sqrt(clockStep);
-                if abs(x(i))>=th%*(min(1-(.08*i*clockStep),.3))
+                if abs(x(i))>=thresholdCurve(i)
                     endTime(k,j,l)=(i)*clockStep;
                     correctResponse(k,j,l)=x(i)>0;
                     %correctRate(j,l)=correctRate(j,l)+(x(i)>0)/M;
@@ -60,6 +73,25 @@ end
 correctRate=reshape(mean(correctResponse),P,Q);
 correctedRate=reshape(sum(correctResponse)./sum(~isnan(endTime)),P,Q); %Excluding non-responses
 
+%% Plot model results
+figure;
+subplot(4,1,2)
+plot([1:N]*clockStep,thresholdCurve,'k')
+hold on
+plot([1:N]*clockStep,-thresholdCurve,'k')
+for l=1:2:P
+    subplot(4,1,2)
+    hold on
+ppp=plot(endTime(~isnan(endTime(:,l,1)),l,1),-thresholdCurve(round(endTime(~isnan(endTime(:,l,1)),l,1)/clockStep))'.*(-1).^(correctResponse(~isnan(endTime(:,l,1)),l,1)==1),'o');
+subplot(4,1,1)
+hold on
+histogram(endTime(correctResponse(:,l,1),l,1),[0:.33:30],'FaceColor',ppp.Color,'FaceAlpha',.4,'EdgeColor','none','Normalization','probability')
+axis([0 30 0 .15])
+subplot(4,1,3)
+hold on
+histogram(endTime(~correctResponse(:,l,1),l,1),[0:.33:30],'FaceColor',ppp.Color,'FaceAlpha',.5,'EdgeColor','none','Normalization','probability')
+axis([0 30 0 .15])
+end
 
 %%
 figure
@@ -83,7 +115,7 @@ for l=1:Q
 end
 xlabel('Drift')
 ylabel('Reaction step')
-plot(pSize*f,empMeanRS,'o','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical std')
+plot(pSize*f,empMeanRS,'o','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical mean')
 grid on
 legend
 
@@ -106,6 +138,8 @@ xlabel('Drift')
 ylabel('Reaction step')
 grid on
 legend(ppp)
+plot(pSize*f,empCorrectMeanRS,'o','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical mean correct')
+plot(pSize*f,empIncorrectMeanRS,'ko','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical mean incorrect')
 
 subplot(2,5,2)
 title('Std RT')
@@ -139,6 +173,8 @@ xlabel('Drift')
 ylabel('Reaction step')
 %legend(ppp)
 grid on
+plot(pSize*f,empCorrectStdRS,'o','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical std correct')
+plot(pSize*f,empIncorrectStdRS,'ko','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical std incorrect')
 
 subplot(2,5,3)
 set(gca,'ColorOrder',cc);
@@ -190,7 +226,8 @@ set(gca,'ColorOrder',cc);
 hold on
 for l=1:Q
     hold on
-    plot(nanmean(endTime(:,:,l),1),correctedRate(:,l),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))])
+    ppp=plot(nanmean(endTime(:,:,l),1),correctedRate(:,l),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))]);
+    plot(th./drifts' .* (2*(1./(1+exp(-2*th*drifts')))-1),correctedRate(:,l),'Color',ppp.Color)
 end
 plot(empMeanRS,mean(empAcc,2),'o','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
 title('Acc vs RT')

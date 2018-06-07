@@ -184,10 +184,14 @@ for k=1:length(list)
     aux=aux(21:45,:,:);
     eval([list{k} '=aux;'])
 end
-Lclicks=squeeze(nansum(accumLresponses,1));
+Lclicks=squeeze(nansum(accumLresponses,1)); %Summing for each trial
 Rclicks=squeeze(nansum(accumRresponses,1));
 Lclicks=Lclicks(:);
 Rclicks=Rclicks(:);
+eLclicks=squeeze(nansum(accumLresponses(1:5,:),1)); %Summing only first 5 strides
+eRclicks=squeeze(nansum(accumRresponses(1:5,:),1));
+eLclicks=eLclicks(:);
+eRclicks=eRclicks(:);
 speedDiffAtStart=vD(1,:)';
 velRprofile=vRload;
 velLprofile=vLload;
@@ -195,7 +199,7 @@ speedRactual=vR;
 speedLactual=vL;
 lastSpeedDiff=vD(end,:)';
 date=date*ones(size(startTime));
-trialData=table(date,startTime,endTime,pertSize,reactionTime,reactionStride,initialResponse,Lclicks,Rclicks,lastSpeedDiff,changeSize);
+trialData=table(date,startTime,endTime,pertSize,reactionTime,reactionStride,initialResponse,Lclicks,Rclicks,lastSpeedDiff,changeSize,eLclicks,eRclicks);
 
 %% Returns a tensor of Ntrials x 25 strides x M fields, containing:
 %startTime,endTime,Lclicks,Rclicks, initialClick, timeToFirstClick,
