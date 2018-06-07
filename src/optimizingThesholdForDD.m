@@ -7,7 +7,7 @@
 
 %% Define diffusion model and simulate:
 N=3e4; %Simulation steps
-th=a/2; %Threshold, arbitrary scale
+th=4/2; %Threshold, arbitrary scale
 M=2e3; %Number of simulations for each parameter pair
 drifts=[0,.05,.1,.2,.4,.8,1];
 noises=1;
@@ -18,7 +18,7 @@ correctResponse=false(M,P,Q);
 endTime=nan(M,P,Q);
 clockStep=.001;
 thresholdCurve=th*ones(1,N);
-%thresholdCurve=1.1*th*(1+(2*[1:N]/N).^.5);
+thresholdCurve=.5*th*(1-(2*[1:N]/N).^.8).*(1-([1:N]/N).^4);
 for l=1:Q
     s=sqrt(noises(l));
     for j=1:P
@@ -46,16 +46,34 @@ subplot(4,1,2)
 plot([1:N]*clockStep,thresholdCurve,'k')
 hold on
 plot([1:N]*clockStep,-thresholdCurve,'k')
-for l=1:2:P
+for l=1:P
     subplot(4,1,2)
     hold on
     ppp=plot(endTime(~isnan(endTime(:,l,1)),l,1),-thresholdCurve(round(endTime(~isnan(endTime(:,l,1)),l,1)/clockStep))'.*(-1).^(correctResponse(~isnan(endTime(:,l,1)),l,1)==1),'o');
+    plot(mean(endTime(correctResponse(:,l,1),l,1)),.2,'o','LineWidth',2,'Color',ppp.Color)
+    plot(mean(endTime(~correctResponse(:,l,1),l,1)),-.2,'x','LineWidth',2,'Color',ppp.Color)
     subplot(4,1,1)
     hold on
     histogram(endTime(correctResponse(:,l,1),l,1),[0:.33:30],'FaceColor',ppp.Color,'FaceAlpha',.4,'EdgeColor','none','Normalization','probability')
-    axis([0 30 0 .15])
+    axis([0 30 0 .25])
     subplot(4,1,3)
     hold on
     histogram(endTime(~correctResponse(:,l,1),l,1),[0:.33:30],'FaceColor',ppp.Color,'FaceAlpha',.5,'EdgeColor','none','Normalization','probability')
-    axis([0 30 0 .15])
+    axis([0 30 0 .25])
+        subplot(4,4,13)
+    hold on
+    plot(mean(endTime(:,l,1)),mean(correctResponse(:,l,1)),'o','Color',ppp.Color)
+    grid on
+    title('Accuracy vs. RT')
+    subplot(4,4,14)
+    hold on
+    plot(drifts(l),mean(correctResponse(:,l,1)),'o','Color',ppp.Color)
+    grid on
+    title('Accuracy vs. drift')
+    subplot(4,4,15)
+    hold on
+    plot(drifts(l),mean(endTime(correctResponse(:,l,1),l,1)),'o','Color',ppp.Color)
+    plot(drifts(l),mean(endTime(~correctResponse(:,l,1),l,1)),'x','Color',ppp.Color)
+    grid on
+    title('RT vs. drift')
 end
