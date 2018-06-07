@@ -234,3 +234,13 @@ title('Acc vs RT')
 ylabel('Accuracy (%)')
 xlabel('Mean RT (steps)')
 grid on
+
+subplot(2,5,9)
+title('RT histogram | correct')
+hold on
+for j=1:3:P
+        dataT=superSuperT(superSuperT.pertSize==pSize(j) | superSuperT.pertSize==-pSize(j),:);
+   histogram(dataT.reactionTime,[0:.5:15],'EdgeColor','none')
+end
+subplot(2,5,10)
+title('RT histogram | incorrect')

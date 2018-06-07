@@ -8,18 +8,24 @@
 %% Define diffusion model and simulate:
 N=3e3;
 t=[1:N]/N;
-th=.88;
-a=.7;
-alpha=.09;
+th=1;
+a=10;
+alpha=1;
 beta=10;
 thresholdCurve=th*(1+a*t.^alpha).*(1-t.^beta);
-Nsim=1e4;
-drifts=[0 .1 .2 .5 .75 1];
+thresholdCurve=.3+.5./(t+.2);
+thresholdCurve=1.5*max(1.7,.4./(2*t+.2)).*(1-t.^beta);
+thresholdCurve=max(2*(1-t),1);
+thresholdCurve=2*ones(size(t));
+Nsim=1e3;
+drifts=[0 .5 1 2 3];
+P=length(drifts);
 [endTime,correctResponse]=simulateEZ(thresholdCurve,drifts,Nsim);
-correctRate=reshape(mean(correctResponse),P,Q);
-correctedRate=reshape(sum(correctResponse)./sum(~isnan(endTime)),P,Q); %Excluding non-responses
+correctRate=reshape(mean(correctResponse),P,1);
+correctedRate=reshape(sum(correctResponse)./sum(~isnan(endTime)),P,1); %Excluding non-responses
 
 %% Plot model results
+clockStep=.01;
 figure;
 subplot(4,1,2)
 plot([1:N]*clockStep,thresholdCurve,'k')
@@ -55,4 +61,11 @@ for l=1:P
     plot(drifts(l),mean(endTime(~correctResponse(:,l,1),l,1)),'x','Color',ppp.Color)
     grid on
     title('RT vs. drift')
+    
+        subplot(4,4,16)
+    hold on
+    plot(drifts(l),std(endTime(correctResponse(:,l,1),l,1)),'o','Color',ppp.Color)
+    plot(drifts(l),std(endTime(~correctResponse(:,l,1),l,1)),'x','Color',ppp.Color)
+    grid on
+    title('sRT vs. drift')
 end
