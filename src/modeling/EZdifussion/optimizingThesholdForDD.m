@@ -8,10 +8,10 @@
 %% Define diffusion model and simulate:
 N=3e3;
 t=[1:N]/N;
-th=.85;
-a=2.05;
-alpha=.1;
-beta=3;
+th=.88;
+a=.7;
+alpha=.09;
+beta=10;
 thresholdCurve=th*(1+a*t.^alpha).*(1-t.^beta);
 Nsim=1e4;
 drifts=[0 .1 .2 .5 .75 1];
