@@ -17,9 +17,9 @@ thresholdCurve=.1./(t+.15);
 %thresholdCurve=1.5*max(1.7,.4./(2*t+.2)).*(1-t.^beta);
 %thresholdCurve=max(2*(1-t),1);
 thresholdCurve=1.5*(ones(size(t))-t.^3);
-beta=10;
-thresholdCurve=(min(1.7*sqrt(.001+N*t*.01),4)).*max((1-(1.1*t).^beta),0);
-%thresholdCurve=.5*ones(size(t));
+beta=100;
+thresholdCurve=(min(1.5*(N*t*.01).^.5,100)).*max((1-(1*t).^beta),0);
+%thresholdCurve=2.1.*max((1-(1*t).^beta),0);
 Nsim=3e3;
 drifts=[0 .1 .2 .5 1 2];
 P=length(drifts);
@@ -43,14 +43,20 @@ for l=1:P
     subplot(4,1,1)
     hold on
     histogram(endTime(correctResponse(:,l,1),l,1),[0:.33:30],'FaceColor',ppp.Color,'FaceAlpha',.4,'EdgeColor','none','Normalization','probability')
-    axis([0 15 0 .35])
+    axis([.5 30 0 .35])
+    set(gca,'XScale','log')
     subplot(4,1,3)
     hold on
     histogram(endTime(~correctResponse(:,l,1),l,1),[0:.33:30],'FaceColor',ppp.Color,'FaceAlpha',.5,'EdgeColor','none','Normalization','probability')
-    axis([0 15 0 .35])
-        subplot(4,4,13)
+    %axis([0 15 0 .35])
+    axis([.5 30 0 .35])
+    set(gca,'XScale','log')
+    
+    subplot(4,4,13)
     hold on
     plot(mean(endTime(:,l,1)),mean(correctResponse(:,l,1)),'o','Color',ppp.Color)
+    r=corr(endTime(:,l,1),correctResponse(:,l,1));
+    plot(mean(endTime(:,l,1))+std(endTime(:,l,1))*[-1 1],mean(correctResponse(:,l,1))+r*std(correctResponse(:,l,1))*[-1 1],'Color',ppp.Color)
     grid on
     title('Accuracy vs. RT')
     subplot(4,4,14)
@@ -72,3 +78,14 @@ for l=1:P
     grid on
     title('sRT vs. drift')
 end
+
+subplot(4,1,2)
+hold on
+X=table(correctResponse(:), endTime(:),'VariableNames',{'correctResponse','endTime'});
+mm1=fitglm(X,'correctResponse~endTime','Distribution','binomial','Link','identity');
+text(10,0,evalc('mm1.disp'),'FontSize',6,'Clipping','off')
+subplot(4,4,13)
+hold on
+t=mean(endTime(:))+std(endTime(:))*[-1 1];
+plot(t,t*mm1.Coefficients.Estimate(2)+mm1.Coefficients.Estimate(1),'k')
+plot(mean(endTime(:)),mean(correctResponse(:)),'ko')
