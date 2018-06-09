@@ -40,6 +40,8 @@ for l=1:P
     ppp=plot(endTime(~isnan(endTime(:,l,1)),l,1),-thresholdCurve(round(endTime(~isnan(endTime(:,l,1)),l,1)/clockStep))'.*(-1).^(correctResponse(~isnan(endTime(:,l,1)),l,1)==1),'o');
     plot(mean(endTime(correctResponse(:,l,1),l,1)),.2,'o','LineWidth',2,'Color',ppp.Color)
     plot(mean(endTime(~correctResponse(:,l,1),l,1)),-.2,'x','LineWidth',2,'Color',ppp.Color)
+    plot(median(endTime(correctResponse(:,l,1),l,1)),.2,'d','LineWidth',2,'Color',ppp.Color)
+    plot(median(endTime(~correctResponse(:,l,1),l,1)),-.2,'*','LineWidth',2,'Color',ppp.Color)
     subplot(4,1,1)
     hold on
     histogram(endTime(correctResponse(:,l,1),l,1),[0:.33:30],'FaceColor',ppp.Color,'FaceAlpha',.4,'EdgeColor','none','Normalization','probability')
@@ -55,6 +57,7 @@ for l=1:P
     subplot(4,4,13)
     hold on
     plot(mean(endTime(:,l,1)),mean(correctResponse(:,l,1)),'o','Color',ppp.Color)
+    plot(median(endTime(:,l,1)),mean(correctResponse(:,l,1)),'d','Color',ppp.Color)
     r=corr(endTime(:,l,1),correctResponse(:,l,1));
     plot(mean(endTime(:,l,1))+std(endTime(:,l,1))*[-1 1],mean(correctResponse(:,l,1))+r*std(correctResponse(:,l,1))*[-1 1],'Color',ppp.Color)
     grid on

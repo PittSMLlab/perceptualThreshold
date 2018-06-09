@@ -25,6 +25,9 @@ for j=1:P
         empCorrectStdRS(j)=nanstd(dataT.reactionTime(dataT.correctResponse));
         empIncorrectMeanRS(j)=nanmean(dataT.reactionTime(~dataT.correctResponse));
         empIncorrectStdRS(j)=nanstd(dataT.reactionTime(~dataT.correctResponse));
+                empMedianRS(j)=nanmedian(dataT.reactionTime);
+        empCorrectMedianRS(j)=nanmedian(dataT.reactionTime(dataT.correctResponse));
+        empIncorrectMedianRS(j)=nanmedian(dataT.reactionTime(~dataT.correctResponse));
 end
 
 [pSize,driftRate,threshold,delay]=fitEZ(superSuperT);
@@ -116,6 +119,7 @@ end
 xlabel('Drift')
 ylabel('Reaction step')
 plot(pSize*f,empMeanRS,'o','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical mean')
+plot(pSize*f,empMedianRS,'d','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical median')
 grid on
 legend
 
@@ -129,10 +133,12 @@ for l=1:Q
     hold on
     %To Do: plot avg. reaction time of correct responses ONLY
     ppp(end+1)=plot(drifts,nanmean(correctEndTime(:,:,l),1),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))]);
+    plot(drifts,nanmedian(correctEndTime(:,:,l),1),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))],'Color',get(ppp(end),'Color'));
 end
 for l=1:2:Q
-    y=2*th*(drifts+1e-9)/noises(l);
-    plot(drifts,th./(drifts+1e-9) .*(1-exp(-y))./(1+exp(-y)),'LineWidth',1,'DisplayName',['\sigma^2=' num2str(noises(l))],'Color',get(ppp(ceil(l/2)),'Color'))
+    y=-2*th*(drifts+1e-9)/noises(l);
+    mrt=th./(drifts+1e-9) .*(1-exp(y))./(1+exp(y));
+    plot(drifts,mrt,'LineWidth',1,'DisplayName',['\sigma^2=' num2str(noises(l))],'Color',get(ppp(ceil(l/2)),'Color'))
 end
 xlabel('Drift')
 ylabel('Reaction step')
@@ -140,6 +146,8 @@ grid on
 legend(ppp)
 plot(pSize*f,empCorrectMeanRS,'o','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical mean correct')
 plot(pSize*f,empIncorrectMeanRS,'ko','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical mean incorrect')
+plot(pSize*f,empCorrectMedianRS,'d','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical median correct')
+plot(pSize*f,empIncorrectMedianRS,'kd','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical median incorrect')
 
 subplot(2,5,2)
 title('Std RT')
@@ -230,17 +238,36 @@ for l=1:Q
     plot(th./drifts' .* (2*(1./(1+exp(-2*th*drifts')))-1),correctedRate(:,l),'Color',ppp.Color)
 end
 plot(empMeanRS,mean(empAcc,2),'o','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
+plot(empMedianRS,mean(empAcc,2),'d','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
 title('Acc vs RT')
 ylabel('Accuracy (%)')
-xlabel('Mean RT (steps)')
+xlabel('Mean/median RT (steps)')
 grid on
 
-subplot(2,5,9)
+subplot(2,5,10)
+set(gca,'ColorOrder',cc);
+hold on
+for l=1:Q
+    hold on
+    ppp=plot(nanstd(endTime(:,:,l),1)./nanmean(endTime(:,:,l),1),correctedRate(:,l),'LineWidth',2,'DisplayName',['\sigma^2=' num2str(noises(l))]);
+    acc=[.501:.001:.999];
+    y=log(1./acc-1);
+    vrt_z2=(-2).*(2*y.*exp(y)-exp(2*y)+1)./((exp(y)+1).^2 .*y);
+    mrt_z=(1-exp(y))./(1+exp(y));
+    plot(sqrt(vrt_z2(2:end))./mrt_z(2:end),acc(2:end),'Color',ppp.Color) %This curve is interesting because it links CV(RT) to accuracy INDEPENDENTLY of parameter fits
+end
+plot(empStdRS./empMeanRS,mean(empAcc,2),'o','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
+title('Acc vs CV(RT)')
+ylabel('Accuracy (%)')
+xlabel('CV RT')
+grid on
+
+subplot(2,5,8)
 title('RT histogram | correct')
 hold on
 for j=1:3:P
         dataT=superSuperT(superSuperT.pertSize==pSize(j) | superSuperT.pertSize==-pSize(j),:);
    histogram(dataT.reactionTime,[0:.5:15],'EdgeColor','none')
 end
-subplot(2,5,10)
+subplot(2,5,9)
 title('RT histogram | incorrect')
