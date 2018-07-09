@@ -49,3 +49,9 @@ src/modeling/sim/slprj/_sfprj/precompile/
 src/modeling/sim/slprj/_sfprj/fullLoop/_self/sfun/info/
 
 src/modeling/sim/slprj/_sfprj/EMLReport/
+
+src/modeling/sim/
+
+data/old/
+
+src/matlab_workspace\.mat
