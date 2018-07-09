@@ -7,7 +7,6 @@ src/sim/slprj/_sfprj/EMLReport/
 
 src/sim/slprj/_jitprj/
 
-*.mat
 
 src/sim/\.SimulinkProject/
 
