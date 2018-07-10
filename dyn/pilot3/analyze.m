@@ -1,15 +1,15 @@
 %%
 addpath(genpath('../../src/'))
 %% Load
-b1=load('20180705T123618_PD_Baseline1.mat');
-b2=load('20180705T124346_PD_Baseline2.mat');
-a1=load('20180705T125434_PD_Adaptation.mat');
-p1=load('20180705T131443_PD_PostAdaptation.mat');
+%b1=load('20180705T123618_PD_Baseline1.mat');
+b2=load('20180709T145259_PD_Baseline2.mat');
+a1=load('20180709T151231_PD_Adaptation.mat');
+p1=load('20180709T153119_PD_PostAdaptation.mat');
 
 %% Basic plot
 figure; hold on;
 t0=0;
-for i=1:4
+for i=2:4
     switch i
         case 1
             aux=b1;
