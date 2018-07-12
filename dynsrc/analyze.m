@@ -71,7 +71,7 @@ for j=1:length(subList)
 end
 %% Plot adaptation
 figure;
-subplot(2,1,1)
+subplot(3,1,1)
 %scatter(allTA.startTime(allTA.pertSize==200),200,50,[1,0,0],'filled')
 hold on
 scatter(allTA.startTime(allTA.pertSize==200),allTA.lastSpeedDiff(allTA.pertSize==200),50,[1,0,0])
@@ -79,11 +79,17 @@ scatter(allTA.startTime(allTA.pertSize==200),allTA.lastSpeedDiff(allTA.pertSize=
 scatter(allTA.startTime(allTA.pertSize==400),allTA.lastSpeedDiff(allTA.pertSize==400),50,[0,0,1])
 grid on
 title('Last Speed Diff')
-subplot(2,1,2)
+subplot(3,1,2)
 %scatter(allTA.startTime(allTA.pertSize==200),200,50,[1,0,0],'filled')
 hold on
 scatter(allTA.startTime(allTA.pertSize==200),allTA.Lclicks(allTA.pertSize==200)-allTA.Rclicks(allTA.pertSize==200),50,[1,0,0])
 %scatter(allTA.startTime(allTA.pertSize==400),400,50,[0,0,1],'filled')
 scatter(allTA.startTime(allTA.pertSize==400),allTA.Lclicks(allTA.pertSize==400)-allTA.Rclicks(allTA.pertSize==400),50,[0,0,1])
 grid on
-title('Net click rate')
+title('Net clicks')
+subplot(3,1,3)
+hold on
+scatter(allTA.startTime(allTA.pertSize==200),allTA.reactionTime(allTA.pertSize==200),50,[1,0,0])
+scatter(allTA.startTime(allTA.pertSize==400),allTA.reactionTime(allTA.pertSize==400),50,[0,0,1])
+title('Reaction times')
+grid on

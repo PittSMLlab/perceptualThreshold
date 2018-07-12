@@ -48,6 +48,7 @@ trialStrides=isnan(vRload);
 inds=find(trialStrides(2:end) & ~trialStrides(1:end-1)); %Last automated stride control: start of trial!
 %inds=find([isnan(vRload(2:end)) & ~isnan(vRload(1:end-1))]);
 pDuration=find(~trialStrides(inds(1)+1:end),1,'first')+1;
+pDuration=8;
 
 Lpress=strcmp(datlog.addLog.keypress(:,1),'leftarrow') | strcmp(datlog.addLog.keypress(:,1),'numpad4') | strcmp(datlog.addLog.keypress(:,1),'pageup');
 %LpressT=(cell2mat(datlog.addLog.keypress(Lpress,2))-datlog.framenumbers.data(1,2))*86400;
