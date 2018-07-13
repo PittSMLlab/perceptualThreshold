@@ -5,27 +5,19 @@ dataDir='../data/';
 subList=dir([dataDir 'AB*']);
 %% Load fast & slow baseline trials
 for j=1:length(subList)
-    base2trials=dir([dataDir subList(j).name '/*Baseline2.mat']);
-    for k=1:length(base2trials)
-        load([dataDir subList(j).name '/' base2trials(k).name],'datlog');
-        [td,sd]=datlogSummarizeFast(datlog);
-        if k>1 || j>1
-           allT=[allT;td];
-           allS=[allS;sd];
+        b1=readtable([dataDir subList(j).name '/Baseline1.csv']);
+        b2=readtable([dataDir subList(j).name '/Baseline1.csv']);
+        if j>1
+           allT=[allT;b1;b2];
         else
-            allT=td;
-            allS=sd;
+            allT=[b1;b2];
         end
-    end
-    base1trials=dir([dataDir subList(j).name '/*Baseline1.mat']);
-    load([dataDir subList(j).name '/' base1trials(1).name],'datlog');
-    [td,sd]=datlogSummarizeFast(datlog);
+
+     bs=readtable([dataDir subList(j).name '/BaselineSlow.csv']);
     if j>1
-       allT1=[allT1;td];
-       allS1=[allS1;sd];
+       allT1=[allT1;bs];
     else
-        allT1=td;
-        allS1=sd;
+        allT1=bs;
     end
 end
 
@@ -54,19 +46,15 @@ subplot(2,2,3) %Clickrates
 S=splitapply(@(x) mean(x),allT.lastSpeedDiff,B); %Counting LEFT IS SLOW choices plus HALF of no response
 scatter(pp,S,50,pp,'filled')
 grid on
-title('Net clicks')
+title('Last diff (mm/s)')
 
 %% Get adapt trials
 for j=1:length(subList)
-    adaptrials=dir([dataDir subList(j).name '/*Adaptation.mat']);
-    load([dataDir subList(j).name '/' adaptrials(1).name],'datlog');
-    [td,sd]=datlogSummarizeFast(datlog);
+    td=readtable([dataDir subList(j).name '/Adaptation.csv']);
     if j>1
        allTA=[allTA;td];
-       allSA=[allSA;sd];
     else
         allTA=td;
-        allSA=sd;
     end
 end
 %% Plot adaptation
