@@ -83,6 +83,7 @@ for i=1:length(inds)
         relEvent=startCue(i); %Last TO where belt-speeds were under automated control
         relEvent2=endCue(i);
         aux=find(allPressT > (relEvent-1),1,'first');
+        if ~isempty(aux)
         aux2=find(pTOt > allPressT(aux),1,'first');
         if ~isempty(aux) && (aux2-inds(i))<pDuration
             reactionTime(i)=allPressT(aux)-relEvent;
@@ -96,6 +97,7 @@ for i=1:length(inds)
         end
         aux=find((allPressT > relEvent) & (allPressT < relEvent2));
         pressTrial(aux)=i;
+        end
 end
 
 %% Filter trials & presses to consider:

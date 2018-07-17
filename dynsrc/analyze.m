@@ -6,7 +6,7 @@ subList=dir([dataDir 'AB*']);
 %% Load fast & slow baseline trials
 for j=1:length(subList)
         b1=readtable([dataDir subList(j).name '/Baseline1.csv']);
-        b2=readtable([dataDir subList(j).name '/Baseline1.csv']);
+        b2=readtable([dataDir subList(j).name '/Baseline2.csv']);
         if j>1
            allT=[allT;b1;b2];
         else

@@ -1,4 +1,5 @@
 %% load datlog
+addpath(genpath('../src/datlogManipulation/'))
 dataDir='./';
 subList=dir([dataDir 'AB*']);
 %% Load fast & slow baseline trials
