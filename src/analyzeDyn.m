@@ -1,5 +1,5 @@
 %%
-addpath(genpath('../src/datlogManipulation/'))
+%addpath(genpath('../src/datlogManipulation/'))
 %%
 dataDir='../data/';
 subList=dir([dataDir 'AB*']);
@@ -35,6 +35,8 @@ S1=splitapply(@(x) (sum(x==-1)+.5*sum(isnan(x)))/length(x),allT1.initialResponse
 scatter(pp1,S1,20,.4*ones(1,3),'filled')
 grid on
 title('<- Choices')
+xlabel('Initial speed diff. (mm/s)')
+ylabel('Left choice (%)')
 
 subplot(2,2,2) %Clickrates
 S=splitapply(@(x) mean(x),allT.Lclicks-allT.Rclicks,B); %Counting LEFT IS SLOW choices plus HALF of no response
@@ -85,7 +87,7 @@ for k=1:3
     %Adapt:
     aux=mod([1:length(allTA.startTime)]-1,19);
     pp=unique(allTA.pertSize);
-    for j=1:length(pp)
+    for j=1%:length(pp)
     scatter(aux(allTA.pertSize==pp(j)),v(allTA.pertSize==pp(j)),50,colors(pp(j)/100+3,:))
     end
     %scatter(aux(allTA.pertSize==400),v(allTA.pertSize==400),50,[0,0,1])
@@ -96,7 +98,7 @@ for k=1:3
     %Base:
     pp=unique(allT.pertSize);
     for j=1:length(pp)
-        scatter(-10+j,func(vB(allT.pertSize==pp(j))),50,colors(pp(j)/100+3,:),'filled')
+        scatter(-10+j,func(vB(allT.pertSize==pp(j))),100,colors(pp(j)/100+3,:),'filled')
         scatter((-10+j)*ones(sum(allT.pertSize==pp(j)),1),(vB(allT.pertSize==pp(j))),50,colors(pp(j)/100+3,:))
     end
     %scatter(-2,func(vB(allT.pertSize==200)),100,[.7,.2,0],'filled')
