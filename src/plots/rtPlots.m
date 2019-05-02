@@ -150,5 +150,8 @@ text(40/1e2,-.4,removeTags(evalc('mm3.disp')),'FontSize',9,'Clipping','off')
 text(40/1e4,.1,removeTags(evalc('mm1.disp')),'FontSize',9,'Clipping','off')
 text(20,.55,removeTags(evalc('mmAll.disp')),'FontSize',9,'Clipping','off')
 text(20,-.35,removeTags(evalc('mmAll2.disp')),'FontSize',9,'Clipping','off')
+
+%TO INCLUDE:
+mm=fitglm(X,'correctResponse~absPertSize+reactionTime:absPertSize','Link','logit','Distribution','binomial')
 end
 

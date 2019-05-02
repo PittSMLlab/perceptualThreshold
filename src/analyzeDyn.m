@@ -44,11 +44,27 @@ scatter(pp,S,50,pp,'filled')
 grid on
 title('Net clicks')
 
-subplot(2,2,3) %Clickrates
+subplot(2,2,3) %last speed diff reached
 S=splitapply(@(x) mean(x),allT.lastSpeedDiff,B); %Counting LEFT IS SLOW choices plus HALF of no response
 scatter(pp,S,50,pp,'filled')
 grid on
 title('Last diff (mm/s)')
+
+subplot(2,2,4) %last speed diff reached
+nonlin=@(x,alpha) sign(x).*abs(x).^alpha;
+S=splitapply(@(x) mean(x),-allT.lastSpeedDiff+allT.pertSize,B); %Counting LEFT IS SLOW choices plus HALF of no response
+scatter(pp,S,50,pp,'filled')
+hold on;
+plot([-200 200],[-200 200],'k--')
+%p=fitPsycho(pp,S);
+alpha=1;%1.4;
+k1=100*(1/75).^alpha; %projection constant. I presume from baseline data that subjects that correct 125mm/s had a PSE actually of 200mm/s away from the starting point
+%plot(k1*nonlin([-200:200],alpha),[-200:1:200],'r')
+plot([-200:200],300*(psycho([0,85],[-200:200])-.5),'r')
+grid on
+title('Total correction (mm/s)')
+xlabel('Init diff (mm/s)')
+ylabel('Corrected amount')
 
 %% Get adapt trials
 for j=1:length(subList)
@@ -71,27 +87,52 @@ end
 
 %% Plot adaptation
 func=@(x) nanmedian(x);
+%func=@(x) nanmean(x);
+
 figure;
-vars={'lastSpeedDiff','netClicks','reactionTime'};
+vars={'lastSpeedDiff','projectedPSE','netClicks','reactionTime'}; %Variables to plot
+%Add: projection to estimate PSE, assuming that subjects undershoot the
+%real 'PSE' target. The problem with this approach is that the true PSE
+%target is unknown, so the projection needs to be made from the actual
+%correction, which is noisier.
+allTA.projectedPSE=allTA.pertSize+k1*nonlin(allTA.lastSpeedDiff-allTA.pertSize,alpha);
+allTP.projectedPSE=allTP.pertSize+k1*nonlin(allTP.lastSpeedDiff-allTP.pertSize,alpha);
+allT.projectedPSE=allT.pertSize+k1*nonlin(allT.lastSpeedDiff-allT.pertSize,alpha);
+
+u=[0 85];
+allTA.projectedPSE2=allTA.pertSize+invpsycho(u,(allTA.lastSpeedDiff-allTA.pertSize)/300+.5);
+allTP.projectedPSE2=allTP.pertSize+invpsycho(u,(allTP.lastSpeedDiff-allTP.pertSize)/300+.5);
+allT.projectedPSE2=allT.pertSize+invpsycho(u,(allT.lastSpeedDiff-allT.pertSize)/300+.5);
+
+%Add: projection to estimate PSE, assuming that subjects prefer to go back
+%to what they were just doing
+
+%Add: accuracy of responses (avg. only): can it be used to infer the
+%population PSE?
+
+%Add: infer initial distance to PSE from reaction times?
+
+
 allTA.netClicks=allTA.Lclicks-allTA.Rclicks;
 allT.netClicks=allT.Lclicks-allT.Rclicks;
 allTP.netClicks=allTP.Lclicks-allTP.Rclicks;
 colors=get(gca,'ColorOrder');
-for k=1:3
+mK=4;
+for k=1:mK
     v=allTA.(vars{k});
     vB=allT.(vars{k});
     vP=allTP.(vars{k});
 
-    subplot(3,1,k)
+    subplot(mK,1,k)
     hold on
     %Adapt:
     aux=mod([1:length(allTA.startTime)]-1,19);
     pp=unique(allTA.pertSize);
-    for j=1%:length(pp)
+    for j=1:length(pp)
     scatter(aux(allTA.pertSize==pp(j)),v(allTA.pertSize==pp(j)),50,colors(pp(j)/100+3,:))
     end
     %scatter(aux(allTA.pertSize==400),v(allTA.pertSize==400),50,[0,0,1])
-    for i=0:18
+    for i=0:18 %19 repetitions of the task
         scatter(i,func(v(aux==i)),100,colors(allTA.pertSize(i+1)/100 + 3,:),'filled')
     end
     
@@ -127,6 +168,43 @@ for k=1:3
 end
 
 
+%% Find temporal decay during post-adapt
+figure; 
+vars={'projectedPSE','lastSpeedDiff','projectedPSE2'};
+x=[15,25+[15,50,80,110,140,170,230,290,350,410,470,530,590]]; %Strides of post in which each trial was conducted
+for i=1:2
+pse=allTP.(vars{i});
+pse=reshape(pse,13,10);
+pseA=allTA.(vars{i});
+pseA=reshape(pseA,19,10);
+pse=[pseA;pse];
+
+pse=pse(:,[1:3,5:end]);%Excluding subject 4, who did not respond in most post-adapt trials
+pse=pse(19:end,:);
+subplot(3,1,i)
+%plot(pse); 
+y=nanmedian(pse');
+%Fit linear model of order 1 to post-adapt data only:
+YY=nan(1,max(x));
+YY(x)=y;
+t1=find(~isnan(YY),1,'first');
+YY=YY(t1:end);
+UU=zeros(1,size(YY,2));
+opts.fixB=0;
+opts.fixD=0;
+opts.fixC=1;
+opts.Nreps=3;
+opts.fastFlag=true;
+opts.refineTol=1e-3;
+mdl=linsys.id(dset(UU,YY),1,opts);
+th(1)=mdl.initCondPrior.state;
+th(2)=-1./log(mdl.A)
+%LS fit to decaying data:
+%th=fminunc(@(t) sum((y-t(1)*exp(-x/t(2))).^2),[200,30]);
+hold on; plot(x,y,'k','LineWidth',2)
+ 
+title(vars{i})
+end
 %% Plot all click rates vs. reaction times
 figure;
 subplot(2,1,1)

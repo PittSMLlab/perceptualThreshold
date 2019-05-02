@@ -12,7 +12,7 @@ end
 x=reshape(x,length(x),1);
 y=reshape(y,length(y),1);
 
-options = optimoptions('fminunc','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11); %The gradient
+options = optimoptions('fminunc','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunctionEvaluations',1e4); %The gradient
 u0=[nanmean(x),nanstd(x)];
 switch mode
     case 'MLE'
