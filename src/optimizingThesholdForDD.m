@@ -4,6 +4,7 @@
 %does any of this resemble true subject behavior?
 %Last: is there a way to define a time-varying threshold on a standard DD
 %model that would attain these results?
+clear all
 
 %% Define diffusion model and simulate:
 N=3e3;

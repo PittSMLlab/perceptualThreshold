@@ -2,7 +2,7 @@
 loadAllDataIntoTable
 %% Simulate random walk threshold times
 N=30; %Simulation steps
-s=.62;
+s=2;
 th=1;
 M=1e5;
 drifts=[0 10 25 50 75 100 125 150 200 250 300 350];
@@ -45,6 +45,8 @@ for j=1:P
         empStdRS(j)=nanstd(dataT.reactionStride);
 end
 title('Empirical')
+ylabel('pdf')
+xlabel('Reaction stride')
 axis([0 15 0 .5])
 %c=(th/s)^2;
 %mu=0;
@@ -68,11 +70,12 @@ plot(drifts,mean(correct),'LineWidth',2,'DisplayName','Model')
 hold on
 plot(drifts,mean(empAcc,2),'o','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
 grid on
-title('Accuracy')
+title('Accuracy vs. difficulty')
 ylabel('Correct decisions')
+xlabel('Drift (1/difficulty)')
 
 subplot(2,3,6)
 plot(empMeanRS,mean(empAcc,2),'o','MarkerSize',5,'LineWidth',2,'DisplayName','Model')
 hold on
 plot(nanmean(t,1),mean(correct))
-title('Acc vs RT')
+title('E(acc) vs E(RT) for different difficulties')

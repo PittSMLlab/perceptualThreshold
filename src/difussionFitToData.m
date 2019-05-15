@@ -181,8 +181,8 @@ xlabel('Drift')
 ylabel('Reaction step')
 %legend(ppp)
 grid on
-plot(pSize*f,empCorrectStdRS,'o','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical std correct')
-plot(pSize*f,empIncorrectStdRS,'ko','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical std incorrect')
+plot(pSize*f,empCorrectStdRS,'.','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical std correct')
+plot(pSize*f,empIncorrectStdRS,'k.','MarkerSize',5,'LineWidth',2,'DisplayName','Empirical std incorrect')
 
 subplot(2,5,3)
 set(gca,'ColorOrder',cc);
