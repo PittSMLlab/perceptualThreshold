@@ -86,9 +86,8 @@ axis([-400 400 0 1])
 hold on
 %y=monoLS(S);
 %plot(pp,y,'k','LineWidth',1)
-[z,peval,L] = fitPsycho(trialData.pertSize,trialData.initialResponse==-1 + .5*isnan(trialData.initialResponse)); %MLE fit
-plot(pp,unique(peval),'k','LineWidth',2)
-legend({'Data','Monotonic fit','Psychometric fit'},'Location','SouthEast')
+%[z,peval,L] = fitPsycho(trialData.pertSize,trialData.initialResponse==-1 + .5*isnan(trialData.initialResponse)); %MLE fit
+%plot(pp,unique(peval),'k','LineWidth',2)
 
 %Add modeling:
 trialData.sqrtPertSize=sign(trialData.pertSize).*sqrt(abs(trialData.pertSize));
@@ -98,9 +97,20 @@ X=trialData(~trialData.noResponse,:); %Table of trials with NR removed
 mm1=fitglm(X,'leftResponse~pertSize*prevSize+pertSize*prevFinalSpeed+blockNo*pertSize','Distribution','binomial');
 mm3=fitglm(X,'leftResponse~pertSize+prevFinalSpeed-1','Distribution','binomial'); %Dropping non-sig terms
 mm3.plotPartialDependence('pertSize')
-legend({'Data','Psychometric fit','Model (part. depend.)'},'Location','SouthEast')
 text(500,.75,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
 text(500,.2,regexprep(removeTags(evalc('mm3.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
+Nsubs=unique(trialData.ID);
+for i=1:length(Nsubs)
+   mm=fitglm(X(X.ID==Nsubs(i),:),'leftResponse~pertSize+prevFinalSpeed-1','Distribution','binomial');
+   mm.plotPartialDependence('pertSize')
+   %y3=mm.predict(trialData(1:24,:));
+   %plot(sort(trialData.pertSize(1:24)),sort(y3),'Color',.4*ones(1,3));
+end
+ll=findobj(gca,'Type','Line');
+set(ll(1:end-1),'Color',.4*ones(1,3));
+set(ll(end),'Color','k','LineWidth',2);
+uistack(ll(1:end-1),'bottom')
+legend({'Data','Group model','Individuals'},'Location','SouthEast')
 title(['Choice vs. perturbation size'])
 ylabel('% ''<'' (left is slow) responses') 
 xlabel('vL>vR     PERTURBATION (mm/s)      vL<vR')
@@ -136,11 +146,18 @@ mm1=fitglm(X,'correctResponses~absPertSize+absPertDiffToLastSS-1','Distribution'
 mm3=fitglm(X,'correctResponses~sqrtAbsPertSize-1','Distribution','binomial'); %Dropping non-sig terms
 mm2=fitglm(X,'correctResponses~absPertSize-1','Distribution','binomial'); %Dropping non-sig terms
 y3=mm3.predict(trialData(1:24,:));
-plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k')
+plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k','LineWidth',2)
 y3=mm2.predict(trialData(1:24,:));
-plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k--')
+plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k--','LineWidth',2)
+Nsubs=unique(trialData.ID);
+for i=1:length(Nsubs)
+   mm=fitglm(X(X.ID==Nsubs(i),:),'correctResponses~sqrtAbsPertSize-1','Distribution','binomial');
+   y3=mm.predict(trialData(1:24,:));
+   plot(sort(trialData(1:24,:).absPertSize),sort(y3),'Color',.4*ones(1,3));
+   text(360,max(y3),num2str(i),'FontSize',6)
+end
 %mm2.plotPartialDependence('absPertSize')
-
+mmAll=fitglm(X,'correctResponses~sqrtAbsPertSize+sqrtAbsPertSize:ID-1','Distribution','binomial') %Dropping non-sig terms
 %Adding vR>vL and vL<vR overlapping
 %scatter(pp(pp>0),S(pp>0),20,cmap(end,:),'filled')
 %scatter(abs(pp(pp<0)),1-S(pp<0),20,cmap(1,:),'filled')
@@ -150,49 +167,14 @@ text(500,.9,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
 text(500,.7,regexprep(removeTags(evalc('mm2.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
 text(500,.5,regexprep(removeTags(evalc('mm3.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
 
-title(['Accuracy vs. abs. perturbation size'])
+%title(['Accuracy vs. abs. perturbation size'])
 ylabel('% correct') 
 xlabel('Abs. perturbation size (mm/s)')
 
 
 %% Second figure: block/learning effects & subject effects
-fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 
-%% Second:
-
-for i=1:Nsubs
-subplot(2,Q,4:5)
-hold on 
-S=splitapply(@(x) (sum(x==-1)+.5*sum(isnan(x)))/length(x),trialData.initialResponse,B); %Counting LEFT IS SLOW choices plus HALF of no response
-%scatter(pp,S,50,pp,'filled')
-grid on
-ylabel('% ''<-'' (left is slow) responses') 
-xlabel('vL>vR     PERTURBATION (mm/s)      vL<vR')
-%TODO: add error shaded area (std)
-axis([-400 400 0 1])
-
-%Add fits:
-hold on
-y=monoLS(S);
-plot(pp,y,'k')
-[z,peval,L] = fitPsycho(trialData.pertSize,trialData.initialResponse==-1 + .5*isnan(trialData.initialResponse)); %MLE fit
-plot(pp,unique(peval),'r')
-
-subplot(2,Q,6:7) %Accuracy as function of perturbation size
-B2=findgroups(abs(trialData.pertSize)); %pertSize>0 means vR>vL
-pp2=unique(abs(trialData.pertSize));
-accuracy=splitapply(@(x) (sum(x))/length(x),trialData.correctResponses+.5*trialData.noResponse,B2); %Counting LEFT IS SLOW choices + half of NR
-accuracy(1)=NaN;
-scatter(pp2,accuracy,80,.4*ones(1,3),'filled')
-grid on
-ylabel('% CORRECT') 
-xlabel('ABS SPEED PERTURBATION (mm/s)')
-axis([0 400 .5 1])
-hold on 
-
-
-end
-
+figure
 %% Third plot: compare accuracy in odd/even and first/second blocks
 
 subplot(2,Q,Q+1) %Block number comparison

@@ -5,23 +5,31 @@ dataDir='../data/';
 subList=dir([dataDir 'AB*']);
 %% Load fast & slow baseline trials
 for j=1:length(subList)
-        b1=readtable([dataDir subList(j).name '/Baseline1.csv']);
-        b2=readtable([dataDir subList(j).name '/Baseline2.csv']);
+        b1=readtable([dataDir subList(j).name '/Baseline1.csv']); %Short response time task (8 strides!)
+        b1.blockNo=ones(size(b1,1),1);
+        b1.subID=j*ones(size(b1,1),1);
+        b2=readtable([dataDir subList(j).name '/Baseline2.csv']); 
+        b2.blockNo=2*ones(size(b2,1),1);
+        b2.subID=j*ones(size(b1,1),1);
         if j>1
            allT=[allT;b1;b2];
         else
-            allT=[b1;b2];
+           allT=[b1;b2];
         end
 
-     bs=readtable([dataDir subList(j).name '/BaselineSlow.csv']);
+     bs=readtable([dataDir subList(j).name '/BaselineSlow.csv']);  %Long-response time task (24 strides)
     if j>1
-       allT1=[allT1;bs];
+        allT1=[allT1;bs];
     else
         allT1=bs;
     end
 end
 
 %% Plot baseline performance
+accPlots(allT)
+rtPlots(allT)
+
+%% Alt:
 figure;
 subplot(2,2,1) %Accuracy
 B=findgroups(allT.pertSize); %pertSize>0 means vR>vL
@@ -39,21 +47,30 @@ xlabel('Initial speed diff. (mm/s)')
 ylabel('Left choice (%)')
 
 subplot(2,2,2) %Clickrates
-S=splitapply(@(x) mean(x),allT.Lclicks-allT.Rclicks,B); %Counting LEFT IS SLOW choices plus HALF of no response
+S=splitapply(@(x) mean(x),allT.Lclicks-allT.Rclicks,B); 
 scatter(pp,S,50,pp,'filled')
+hold on
+S1=splitapply(@(x) mean(x),allT1.Lclicks-allT1.Rclicks,B1);  %Does this mean that subjects are better at the short task? Is it the urgency? Or they being used to the task?
+scatter(pp1,S1,20,.4*ones(1,3),'filled')
 grid on
 title('Net clicks')
 
 subplot(2,2,3) %last speed diff reached
-S=splitapply(@(x) mean(x),allT.lastSpeedDiff,B); %Counting LEFT IS SLOW choices plus HALF of no response
+S=splitapply(@(x) mean(x),allT.lastSpeedDiff,B); 
 scatter(pp,S,50,pp,'filled')
+hold on
+S1=splitapply(@(x) mean(x),allT1.lastSpeedDiff,B1); 
+scatter(pp1,S1,20,.4*ones(1,3),'filled')
 grid on
 title('Last diff (mm/s)')
 
 subplot(2,2,4) %last speed diff reached
 nonlin=@(x,alpha) sign(x).*abs(x).^alpha;
-S=splitapply(@(x) mean(x),-allT.lastSpeedDiff+allT.pertSize,B); %Counting LEFT IS SLOW choices plus HALF of no response
+S=splitapply(@(x) mean(x),-allT.lastSpeedDiff+allT.pertSize,B); 
 scatter(pp,S,50,pp,'filled')
+hold on
+S1=splitapply(@(x) mean(x),-allT1.lastSpeedDiff+allT1.pertSize,B1); 
+scatter(pp1,S1,20,.4*ones(1,3),'filled')
 hold on;
 plot([-200 200],[-200 200],'k--')
 %p=fitPsycho(pp,S);
@@ -171,7 +188,18 @@ end
 %% Find temporal decay during post-adapt
 figure; 
 vars={'projectedPSE','lastSpeedDiff','projectedPSE2'};
-x=[15,25+[15,50,80,110,140,170,230,290,350,410,470,530,590]]; %Strides of post in which each trial was conducted
+load dynamicProfiles.mat %Storage for dynamic profiles
+firstResponseStrideA=find(isnan(vL(2:end)) & ~isnan(vL(1:end-1)));
+firstResponseStrideP=length(vL)+find(isnan(vLp(2:end)) & ~isnan(vLp(1:end-1)));
+taskInd=[firstResponseStrideA; firstResponseStrideP];
+U=[vR-vL; vRp-vLp];
+U2=[zeros(45,1); 500*ones(905,1); zeros(645,1)]; %spped profile if we didnt have the tasks
+pS=[allTA.pertSize; allTP.pertSize]; %Perturbations
+pS=pS(1:32);
+U3=zeros(1595,1);
+U3(taskInd)=pS;
+%x=[15,25+[15,50,80,110,140,170,230,290,350,410,470,530,590]]; %Strides of post in which each trial was conducted
+
 for i=1:2
 pse=allTP.(vars{i});
 pse=reshape(pse,13,10);
@@ -180,27 +208,48 @@ pseA=reshape(pseA,19,10);
 pse=[pseA;pse];
 
 pse=pse(:,[1:3,5:end]);%Excluding subject 4, who did not respond in most post-adapt trials
+y=nanmedian(pse'); %Median across subjects
+
 pse=pse(19:end,:);
 subplot(3,1,i)
 %plot(pse); 
-y=nanmedian(pse');
 %Fit linear model of order 1 to post-adapt data only:
-YY=nan(1,max(x));
-YY(x)=y;
-t1=find(~isnan(YY),1,'first');
-YY=YY(t1:end);
-UU=zeros(1,size(YY,2));
+YY=nan(1,1595);
+YY(taskInd)=y;
+y=y(951:end); %Post-adapt only
+
+t1=find(~isnan(y),1,'first');
+YY2=y(t1:end);
+UU=zeros(1,size(YY2,2));
 opts.fixB=0;
 opts.fixD=0;
-opts.fixC=1;
+opts.fixC=[]; %This could be fixed, but makes no difference
 opts.Nreps=3;
-opts.fastFlag=true;
+opts.fastFlag=false;
 opts.refineTol=1e-3;
-mdl=linsys.id(dset(UU,YY),1,opts);
+mdl=linsys.id(dset(UU,YY2),1,opts); %No input
 th(1)=mdl.initCondPrior.state;
 th(2)=-1./log(mdl.A)
 %LS fit to decaying data:
 %th=fminunc(@(t) sum((y-t(1)*exp(-x/t(2))).^2),[200,30]);
+
+%Trying to track PSE with additional elements:
+opts.indB=1;
+opts.indD=[];
+opts.fixB=[];
+opts.fixD=0;
+opts.fixC=[]; %Could be fixed, but also we can normalize post-hoc
+opts.fixX0=0;
+opts.fixP0=0;
+opts.Nreps=10;
+opts.fastFlag=false;
+UU=[U2'; U2'-U3'];
+UU=U2';
+t1=find(~isnan(YY),1,'first');
+YY3=YY(t1:end);
+UU3=UU(:,t1:end);
+mdl=linsys.id(dset(UU3,YY3),1,opts);
+
 hold on; plot(x,y,'k','LineWidth',2)
  
 title(vars{i})
