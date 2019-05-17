@@ -38,9 +38,9 @@ fun=@nanmean;
 fh=figure('Units','Normalized','OuterPosition',[.5 0 .5 1]);
 
 subplot(2,Q,1:2)
-S3=splitapply(fun,rt,B2); %Sort by absolute pert size
-E3=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),rt,B2); 
-ss=scatter(pp2,S3,50,.4*ones(1,3),'filled','DisplayName','All data');
+RT=splitapply(fun,rt,B2); %Sort by absolute pert size
+eRT=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),rt,B2); 
+ss=scatter(pp2,RT,50,.4*ones(1,3),'filled','DisplayName','All data');
 hold on
 
 grid on
@@ -108,7 +108,7 @@ for i=1:length(Nsubs)
 end
 
 
-e=errorbar(pp2,S3,E3,'k');
+e=errorbar(pp2,RT,eRT,'k');
 e.LineStyle='none';
 legend([ss,pm,ph])
 %mm2=fitglm(X,'reactionTime~absPertSize*pertSign+blockNo+correctResponse*absPertSize','Distribution','poisson','Link','reciprocal','DispersionFlag',true); %Logisitc regression, excluding null responses
@@ -152,5 +152,88 @@ xlabel('Mean RT (s)')
 ylabel('Mean accuracy (%)')
 title('RT vs accuracy across subjects')
 text(6,.8,removeTags(evalc('mmAll2.disp')),'FontSize',7,'Clipping','off')
+
+%% Add some comparison to EZ-DD model (group level):
+trialData.nullTrials=trialData.pertSize==0;
+trialData.correctResponses=trialData.initialResponse==-sign(trialData.pertSize) & ~trialData.nullTrials;
+%Compute accuracy: and RT as function of pertSize
+rt=trialData.reactionTime;
+fun=@nanmean;
+%fun=@nanmedian;
+fh=figure('Units','Normalized','OuterPosition',[.5 0 .5 1]);
+
+
+B2=findgroups(abs(trialData.pertSize)); %pertSize>0 means vR>vL
+pp2=unique(abs(trialData.pertSize));
+Acc=splitapply(@(x) nansum(x)/sum(~isnan(x)),trialData.correctResponses.*abs(trialData.initialResponse),B2); %Not counting NR trials at all
+Acc(1)=.5; %No definition of accuracy for null-trials
+eAcc=sqrt(Acc.*(1-Acc))./sqrt(splitapply(@(x) sum(~isnan(x)),trialData.correctResponses.*abs(trialData.initialResponse),B2));
+empDiff= -1./log(Acc.^-1 -1);%Estimate of s^/av
+rt=rt(trialData.correctResponses | trialData.nullTrials);
+B2=B2(trialData.correctResponses | trialData.nullTrials);
+RT=splitapply(fun,rt,B2); %Sort by absolute pert size
+vRT=splitapply(@(x) nanvar(x),rt,B2);
+eRT=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),rt,B2);
+
+%regardless of how we map stimulus intensity to drift rate!
+diff=[.01:.01:5]; %difficulty values= s^2/av in Wagenmakers EZ model notation
+Toff=0;
+s=[.28];
+for i=1:length(s)
+    y=-1./diff; %Inverse difficulty
+    a=1; %Can be arbitrarily defined (only s^2/a^2 matters)
+    a_v= a^2/s(i)^2 .*diff;%a/v
+    %v=s(i)^2./(a.*diff);
+    Pc=1./(1+exp(y)); 
+    MDT=Toff+(.5*a_v).*(1-exp(y))./(1+exp(y)); 
+    %VRT=.5*diff.*(a./v).^2 .*(2.*y.*exp(y)-exp(2*y)+1).*Pc.^2; %Equivalent
+    VRT=.5*(a_v).^2 .*(diff.*(2*Pc-1)-2*Pc.*(1-Pc));
+    subplot(4,1,1); hold on; plot(diff,MDT,'DisplayName',['s=' num2str(s(i))]); 
+    subplot(4,1,2); hold on; plot(diff,Pc,'DisplayName',['s=' num2str(s(i))]); 
+    subplot(4,2,7); hold on; plot(MDT,Pc);
+    subplot(4,2,8); hold on; plot(VRT,Pc);
+    subplot(4,1,3); hold on; plot(diff,VRT);
+end
+diffFun=@(x) .3.*(350./x).^.75;
+subplot(4,1,1);
+xlabel('Difficulty'); 
+ylabel('Mean Decision Time (MDT)')
+cc=pp2;
+cc=.4*ones(1,3);
+scatter(diffFun(pp2),RT,50,cc,'filled')
+errorbar(diffFun(pp2),RT,eRT,'Vertical','Color','k','LineStyle','none')
+%plot([0 5],(Toff+m(i)/2) *[1 1],'k--')
+legend({'EZ model fit','Data','ste','MDT(Diff=\infty)'},'Location','SouthEast'); 
+subplot(4,1,2);
+xlabel('Difficulty'); 
+ylabel('p(correct)')
+scatter(diffFun(pp2),Acc,50,cc,'filled')
+errorbar(diffFun(pp2),Acc,eAcc,'Vertical','Color','k','LineStyle','none')
+legend({'EZ model fit','Data','ste'},'Location','NorthEast'); 
+subplot(4,1,3)
+scatter(diffFun(pp2),vRT,50,cc,'filled')
+xlabel('Difficulty')
+ylabel('Variance of DT')
+subplot(4,2,7);
+scatter(RT,Acc,50,cc,'filled')
+errorbar(RT,Acc,eRT,'Horizontal','Color','k','LineStyle','none')
+errorbar(RT,Acc,eAcc,'Vertical','Color','k','LineStyle','none')
+legend({'EZ model fit','Data','ste'},'Location','SouthWest')
+xlabel('MDT')
+ylabel('p(correct)')
+subplot(4,2,8)
+scatter(vRT,Acc,50,cc,'filled')
+xlabel('VDT')
+ylabel('p(correct)')
+
+%% Group fits do not work well, but individual fits may:
+%Step 1: fit a psychometric curve to each subject
+%Step 2: use the param fits to infer difficulty for each belt speed difference
+%Step 3: use VRT, RT from all correct trials somehow to infer the best
+%value for s^2 for that subject
+%Idea: express VRT, MDT as a function of difficulty and (a/s). [CAN BE
+%DONE], use empirical Accuracy & difficulty (or psychometric accuracy and
+%difficulty?) to infer optimal value of a/s given the subject's VRT -> Does
+%this work? Too little data per subject!
 end
 
