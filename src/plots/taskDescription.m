@@ -1,5 +1,5 @@
 %% Task figure
-figure('Units','Normalized','OuterPosition',[.7 .6 .3 .4])
+figure('Units','Normalized','OuterPosition',[.5 .5 .5 .5])
 v=[zeros(1,5),ones(1,2),nan(1,26),zeros(1,6)];
 patch([7 32 32 7],[-1 -1 2 2],.6*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
 hold on
@@ -24,13 +24,15 @@ w=42;
 annotation('textarrow',.03+[15.6 14.5]/40,.2/h+[1.2 1.05]/h,'String',{'Incorrect';' response'})
 annotation('textarrow',.03+[15.65 14.55]/40,.2/h+[.75 .9]/h,'String',{'Correct  '; '  response'})
 annotation('doublearrow',[11 15]/w,.2/h+[.3 .3]/h)
-text(7.2,.32,{'Reaction';'    time'},'FontName','OpenSans')
+text(8,.32,{'Reaction';'    time'},'FontName','OpenSans')
 annotation('doublearrow',[8.3 8.3]/w,(.2+[.15 .95])/h)
 text(2.9,.3,'Probe size','Rotation',90,'FontName','OpenSans')
-annotation('doublearrow',[32 32]/w,(.2+[.15 r1(end)+.05])/h)
-annotation('doublearrow',[31 31]/w,(.2+[.15 r2(end)+.05])/h)
-text(28.8,.1,{'Reported PSE'},'Rotation',90,'FontName','OpenSans')
+%annotation('doublearrow',[32 32]/w,(.2+[.15 r1(end)+.08])/h)
+%annotation('doublearrow',[31 31]/w,(.2+[.15 r2(end)+.03])/h)
+annotation('textarrow',[31 32.4]/w,([.8 r1(end)+.32 ])/h,'String',{'Reported';' PSE'})
+annotation('arrow',[31.5,32.6]/w,([.85 r2(end)+.2])/h)
+%text(28.8,.1,{'Reported PSE'},'Rotation',90,'FontName','OpenSans')
 title('Perceptual task')
 
 legend([p1 p2],'Location','NorthEast')
-saveFig(gcf,'.','PerceptutalTask',0)
+saveFig_(gcf,'../../fig/','PerceptutalTask',0)

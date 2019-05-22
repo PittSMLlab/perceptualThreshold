@@ -36,7 +36,7 @@ fh=figure('Units','Normalized','OuterPosition',[.5 0 .5 1]);
 Q=6;
 
 %% First 3 plots: some summary stats
-subplot(5,Q,1:2)
+subplot(5,3,1)
 c=[sum(trialData.pertSize<0) sum(trialData.nullTrials) sum(trialData.pertSize>0) ]/numel(trialData.nullTrials);
 bar(3,c(:,1),'FaceColor',cmap(end-colorOff+1,:))
 hold on
@@ -46,7 +46,7 @@ set(gca,'XTick',1:3,'XTickLabel',{'vL>vR','NT','vL<vR'},'YLim',[0 .5])
 title('Trial decomposition')
 grid on
 
-subplot(5,Q,3:4)
+subplot(5,3,2)
 d=[sum(trialData.initialResponse==1 & trialData.nullTrials) sum(trialData.initialResponse==-1 & trialData.nullTrials)  sum(trialData.noResponse & trialData.nullTrials)]/sum(trialData.nullTrials);
 bar(1,d(:,1),'FaceColor',cmap(colorOff,:))
 hold on
@@ -57,7 +57,7 @@ set(gca,'XTick',1:3,'XTickLabel',{'>','<','NR'})
 title('Null trial responses')
 grid on
 
-subplot(5,Q,5:6)
+subplot(5,3,3)
 d=[sum(trialData.correctResponses) sum(trialData.incorrectResponses)  sum(trialData.noResponse)]/sum(~trialData.nullTrials);
 dN=[sum(trialData.noResponse) sum(trialData.nullTrials)]/numel(trialData.nullTrials);
 d2=[sum(trialData.correctResponses & (trialData.pertSize<0))/sum(trialData.pertSize<0)];
@@ -72,13 +72,13 @@ title('Non-null trial accuracy')
 
 
 %% Fourth plot: % <- choices as function of perturbation size
-subplot(5,Q,[Q+[1:Q/2], 2*Q+[1:Q/2]])
+subplot(5,2,[3,5])
 %S=splitapply(@(x) (sum(x==-1)+.5*sum(isnan(x)))/length(x),trialData.initialResponse,B); %Counting LEFT IS SLOW choices plus HALF of no response
 S=splitapply(@(x) sum(x==-1)/sum(~isnan(x)),trialData.initialResponse,B); %Not counting NR responses
-scatter(pp,S,50,pp,'filled')
+scatter(pp,S,50,zeros(1,3),'filled')
 grid on
 ylabel('% ''<'' (left is slow) responses') 
-xlabel('vL>vR     PERTURBATION (mm/s)      vL<vR')
+xlabel('vL>vR     probe (mm/s)      vL<vR')
 %TODO: add error shaded area (std)
 axis([-400 400 0 1])
 
@@ -97,8 +97,8 @@ X=trialData(~trialData.noResponse,:); %Table of trials with NR removed
 mm1=fitglm(X,'leftResponse~pertSize*prevSize+pertSize*prevFinalSpeed+blockNo*pertSize','Distribution','binomial');
 mm3=fitglm(X,'leftResponse~pertSize+prevFinalSpeed-1','Distribution','binomial'); %Dropping non-sig terms
 mm3.plotPartialDependence('pertSize')
-text(500,.75,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
-text(500,.2,regexprep(removeTags(evalc('mm3.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
+text(-400,-.6,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
+text(-400,-1.2,regexprep(removeTags(evalc('mm3.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
 Nsubs=unique(trialData.ID);
 for i=1:length(Nsubs)
    mm=fitglm(X(X.ID==Nsubs(i),:),'leftResponse~pertSize+prevFinalSpeed-1','Distribution','binomial');
@@ -109,23 +109,25 @@ end
 ll=findobj(gca,'Type','Line');
 set(ll(1:end-1),'Color',.4*ones(1,3));
 set(ll(end),'Color','k','LineWidth',2);
-uistack(ll(1:end-1),'bottom')
 legend({'Data','Group model','Individuals'},'Location','SouthEast')
-title(['Choice vs. perturbation size'])
+uistack(ll(1:end-1),'bottom')
+title(['Choice vs. probe size'])
 ylabel('% ''<'' (left is slow) responses') 
-xlabel('vL>vR     PERTURBATION (mm/s)      vL<vR')
+xlabel('vL>vR     probe (mm/s)      vL<vR')
+set(gca,'XLim',[-350 350])
 %% Fifth plot: accuracy
 
-subplot(5,Q,[3*Q+[1:Q/2], 4*Q+[1:Q/2]])%Accuracy as function of perturbation size
+%subplot(5,Q,[3*Q+[1:Q/2], 4*Q+[1:Q/2]])%Accuracy as function of perturbation size
+subplot(5,2,[4,6])
 B2=findgroups(abs(trialData.pertSize)); %pertSize>0 means vR>vL
 pp2=unique(abs(trialData.pertSize));
 accuracy=splitapply(@(x) (sum(x))/length(x),trialData.correctResponses+.5*trialData.noResponse,B2); %Counting LEFT IS SLOW choices + half of NR
 accuracy=splitapply(@(x) nansum(x)/sum(~isnan(x)),trialData.correctResponses.*abs(trialData.initialResponse),B2); %Not counting NR trials at all
 accuracy(1)=NaN; %No definition of accuracy for null-trials
-scatter(pp2,accuracy,80,.4*ones(1,3),'filled')
+scatter(pp2,accuracy,50,0*ones(1,3),'filled')
 grid on
-ylabel('% CORRECT') 
-xlabel('ABS SPEED PERTURBATION (mm/s)')
+ylabel('% correct') 
+xlabel('(abs.) probe size (mm/s)')
 axis([0 400 .5 1])
 set(gca,'YTick',[.5:.05:1],'XTick',[0:50:350])
 hold on 
@@ -140,7 +142,7 @@ p=binocdf(accuracy.*Ntrials,Ntrials,.5,'upper'); %Single tail, as we only care w
 trialData.absPertSize=abs(trialData.pertSize);
 trialData.absPertDiffToPrev=abs(trialData.pertSize-trialData.prevSize);
 trialData.absPertDiffToLastSS=abs(trialData.pertSize-trialData.prevFinalSpeed);
-trialData.sqrtAbsPertSize=(trialData.absPertSize).^.5;
+trialData.sqrtAbsPertSize=(trialData.absPertSize).^.75;
 X=trialData(~trialData.noResponse & ~trialData.nullTrials,:); %Table of trials with NR removed
 mm1=fitglm(X,'correctResponses~absPertSize+absPertDiffToLastSS-1','Distribution','binomial');
 mm3=fitglm(X,'correctResponses~sqrtAbsPertSize-1','Distribution','binomial'); %Dropping non-sig terms
@@ -148,13 +150,13 @@ mm2=fitglm(X,'correctResponses~absPertSize-1','Distribution','binomial'); %Dropp
 y3=mm3.predict(trialData(1:24,:));
 plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k','LineWidth',2)
 y3=mm2.predict(trialData(1:24,:));
-plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k--','LineWidth',2)
+%plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k--','LineWidth',2)
 Nsubs=unique(trialData.ID);
 for i=1:length(Nsubs)
    mm=fitglm(X(X.ID==Nsubs(i),:),'correctResponses~sqrtAbsPertSize-1','Distribution','binomial');
    y3=mm.predict(trialData(1:24,:));
    plot(sort(trialData(1:24,:).absPertSize),sort(y3),'Color',.4*ones(1,3));
-   text(360,max(y3),num2str(i),'FontSize',6)
+   %text(360,max(y3),num2str(i),'FontSize',6)
 end
 %mm2.plotPartialDependence('absPertSize')
 mmAll=fitglm(X,'correctResponses~sqrtAbsPertSize+sqrtAbsPertSize:ID-1','Distribution','binomial') %Dropping non-sig terms
@@ -162,15 +164,18 @@ mmAll=fitglm(X,'correctResponses~sqrtAbsPertSize+sqrtAbsPertSize:ID-1','Distribu
 %scatter(pp(pp>0),S(pp>0),20,cmap(end,:),'filled')
 %scatter(abs(pp(pp<0)),1-S(pp<0),20,cmap(1,:),'filled')
 
-legend({'Data','Model sqrt(abs(pertSize))','Model abs(pertSize)'},'Location','SouthEast')
-text(500,.9,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
-text(500,.7,regexprep(removeTags(evalc('mm2.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
-text(500,.5,regexprep(removeTags(evalc('mm3.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
+
+text(0,.25,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
+text(0,.05,regexprep(removeTags(evalc('mm2.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
+text(0,-.15,regexprep(removeTags(evalc('mm3.disp')),'model:\n','model: \n'),'FontSize',6,'Clipping','off')
 
 %title(['Accuracy vs. abs. perturbation size'])
 ylabel('% correct') 
-xlabel('Abs. perturbation size (mm/s)')
-
+xlabel('abs. probe size (mm/s)')
+set(gca,'XLim',[0 350])
+title('Accuracy vs. probe size')
+plot(.13*[1 1]*1050,[.5 1],'k--')
+legend({'Group data','Group fit','Individual fits','Reported threshold'},'Location','SouthEast')
 
 %% Second figure: block/learning effects & subject effects
 

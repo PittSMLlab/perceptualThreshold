@@ -1,10 +1,12 @@
 %% Generate accuracy plots for each subject
 %%
+clear all
+addpath(genpath('../'))
 run loadAllDataIntoTable.m
 addpath(genpath('../../monoLS'))
 %%
 fh=accPlots(superSuperT);
-%saveFig(fh,'../../fig/all/',['accuracyAll'],0)
+saveFig_(fh,'../fig/allstatic/',['accuracyAll'],0)
 %%
 %All subjects:
 fh=rtPlots(superSuperT);

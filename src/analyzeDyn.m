@@ -27,7 +27,7 @@ end
 
 %% Plot baseline performance
 accPlots(allT)
-rtPlots(allT)
+%rtPlots(allT)
 
 %% Alt:
 figure;
@@ -103,11 +103,13 @@ for j=1:length(subList)
 end
 
 %% Plot adaptation
-func=@(x) nanmedian(x);
-%func=@(x) nanmean(x);
-
+%func=@(x) nanmedian(x);
+func=@(x) nanmean(x);
+allTA.leftResponse=allTA.initialResponse==-1+.5*isnan(allTA.initialResponse); %No response is coded as 50/50
+allTP.leftResponse=allTP.initialResponse==-1+.5*isnan(allTP.initialResponse); %No response is coded as 50/50
+allT.leftResponse=allT.initialResponse==-1+.5*isnan(allT.initialResponse);
 figure;
-vars={'lastSpeedDiff','projectedPSE','netClicks','reactionTime'}; %Variables to plot
+vars={'lastSpeedDiff','projectedPSE','leftResponse','reactionTime'}; %Variables to plot
 %Add: projection to estimate PSE, assuming that subjects undershoot the
 %real 'PSE' target. The problem with this approach is that the true PSE
 %target is unknown, so the projection needs to be made from the actual

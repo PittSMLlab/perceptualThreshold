@@ -1,5 +1,13 @@
 function saveFig(h,dir,fileName,sizeFlag)
 %saveFig saves figure h as .fig and .png for further reference
+fName='OpenSans';
+txt=findobj(h,'Type','Text');
+set(txt,'FontName',fName);
+ax=findobj(h,'Type','Axes');
+set(ax,'FontName',fName);
+for i=1:length(ax)
+    ax(i).Title.FontWeight='normal';
+end
 
 if nargin<4 || isempty(sizeFlag)
 set(h,'Units','Normalized','OuterPosition',[0 0 1 1])
