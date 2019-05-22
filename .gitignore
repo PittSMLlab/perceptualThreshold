@@ -57,3 +57,5 @@ data/old/
 src/matlab_workspace\.mat
 
 *.mat
+
+*.eps

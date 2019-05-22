@@ -5,13 +5,16 @@ addpath(genpath('../'))
 run loadAllDataIntoTable.m
 addpath(genpath('../../monoLS'))
 %%
-fh=accPlots(superSuperT);
-saveFig_(fh,'../fig/allstatic/',['accuracyAll'],0)
+[f1,f2]=accPlots(superSuperT);
+saveFig(f1,'../fig/allstatic/',['accuracyAll'],0)
+saveFig(f2,'../fig/allstatic/',['accuracySubjectAndBlockEffects'],0)
 %%
 %All subjects:
-fh=rtPlots(superSuperT);
+[fh,f2]=rtPlots(superSuperT);
+%saveFig(fh,'../fig/allstatic/',['rtAll'],0)
+saveFig(f2,'../fig/allstatic/',['EZdd'],0)
 %w/o subject 2:
-fh=rtPlots(superSuperT(superSuperT.subID~=2,:));
+%fh=rtPlots(superSuperT(superSuperT.subID~=2,:));
 %saveFig(fh,'../../fig/all/',['rtAll'],0)
 
 %%

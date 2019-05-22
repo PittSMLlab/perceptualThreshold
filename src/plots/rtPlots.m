@@ -1,4 +1,4 @@
-function fh=rtPlots(trialData,goodOnly)
+function [fh,f2]=rtPlots(trialData,goodOnly)
 if nargin<2 || isempty(goodOnly)
     goodOnly=0;
 end
@@ -144,10 +144,14 @@ pp=unique(X.absPertSize);
 hold on
 for i=1:length(Nsubs)
     mrt(i)=nanmean(X.reactionTime(X.ID==Nsubs(i)));
+    N(i)=sum(X.ID==Nsubs(i));
+    ert(i)=nanstd(X.reactionTime(X.ID==Nsubs(i)))/sqrt(N(i));
     macc(i)=nanmean(X.correctResponse(X.ID==Nsubs(i)));
-   text(mrt(i)+.2,macc(i),num2str(i),'FontSize',6)
+   text(mrt(i)+.1,macc(i)-.01,num2str(i),'FontSize',6)
 end
 scatter(mrt,macc,50,.4*ones(1,3),'filled')
+errorbar(mrt,macc,macc.*(1-macc)./sqrt(N),'Vertical','Color','k','LineStyle','none')
+errorbar(mrt,macc,ert,'Horizontal','Color','k','LineStyle','none')
 xlabel('Mean RT (s)')
 ylabel('Mean accuracy (%)')
 title('RT vs accuracy across subjects')
@@ -160,7 +164,7 @@ trialData.correctResponses=trialData.initialResponse==-sign(trialData.pertSize) 
 rt=trialData.reactionTime;
 fun=@nanmean;
 %fun=@nanmedian;
-fh=figure('Units','Normalized','OuterPosition',[.5 0 .5 1]);
+f2=figure('Units','Normalized','OuterPosition',[.5 0 .5 .5]);
 
 
 B2=findgroups(abs(trialData.pertSize)); %pertSize>0 means vR>vL
@@ -188,42 +192,42 @@ for i=1:length(s)
     MDT=Toff+(.5*a_v).*(1-exp(y))./(1+exp(y)); 
     %VRT=.5*diff.*(a./v).^2 .*(2.*y.*exp(y)-exp(2*y)+1).*Pc.^2; %Equivalent
     VRT=.5*(a_v).^2 .*(diff.*(2*Pc-1)-2*Pc.*(1-Pc));
-    subplot(4,1,1); hold on; plot(diff,MDT,'DisplayName',['s=' num2str(s(i))]); 
-    subplot(4,1,2); hold on; plot(diff,Pc,'DisplayName',['s=' num2str(s(i))]); 
-    subplot(4,2,7); hold on; plot(MDT,Pc);
-    subplot(4,2,8); hold on; plot(VRT,Pc);
-    subplot(4,1,3); hold on; plot(diff,VRT);
+    subplot(2,2,1); hold on; plot(diff,MDT,'DisplayName',['s=' num2str(s(i))],'LineWidth',2); 
+    subplot(2,2,2); hold on; plot(diff,Pc,'DisplayName',['s=' num2str(s(i))],'LineWidth',2); 
+    subplot(2,4,7); hold on; plot(MDT,Pc,'LineWidth',2);
+    subplot(2,4,8); hold on; plot(VRT,Pc,'LineWidth',2);
+    subplot(2,2,3); hold on; plot(diff,VRT,'LineWidth',2);
 end
 diffFun=@(x) .3.*(350./x).^.75;
-subplot(4,1,1);
+subplot(2,2,1);
 xlabel('Difficulty'); 
-ylabel('Mean Decision Time (MDT)')
+ylabel('Mean Reaction Time (MRT)')
 cc=pp2;
 cc=.4*ones(1,3);
 scatter(diffFun(pp2),RT,50,cc,'filled')
 errorbar(diffFun(pp2),RT,eRT,'Vertical','Color','k','LineStyle','none')
 %plot([0 5],(Toff+m(i)/2) *[1 1],'k--')
-legend({'EZ model fit','Data','ste','MDT(Diff=\infty)'},'Location','SouthEast'); 
-subplot(4,1,2);
+%legend({'EZ model fit','Group data','ste','MDT(Diff=\infty)'},'Location','SouthEast'); 
+subplot(2,2,2);
 xlabel('Difficulty'); 
 ylabel('p(correct)')
 scatter(diffFun(pp2),Acc,50,cc,'filled')
 errorbar(diffFun(pp2),Acc,eAcc,'Vertical','Color','k','LineStyle','none')
-legend({'EZ model fit','Data','ste'},'Location','NorthEast'); 
-subplot(4,1,3)
+legend({'DD model fit','Group data','ste'},'Location','NorthEast'); 
+subplot(2,2,3)
 scatter(diffFun(pp2),vRT,50,cc,'filled')
 xlabel('Difficulty')
-ylabel('Variance of DT')
-subplot(4,2,7);
+ylabel('Variance of RT')
+subplot(2,4,7);
 scatter(RT,Acc,50,cc,'filled')
 errorbar(RT,Acc,eRT,'Horizontal','Color','k','LineStyle','none')
 errorbar(RT,Acc,eAcc,'Vertical','Color','k','LineStyle','none')
-legend({'EZ model fit','Data','ste'},'Location','SouthWest')
-xlabel('MDT')
+%legend({'EZ model fit','Data','ste'},'Location','SouthWest')
+xlabel('MRT')
 ylabel('p(correct)')
-subplot(4,2,8)
+subplot(2,4,8)
 scatter(vRT,Acc,50,cc,'filled')
-xlabel('VDT')
+xlabel('VRT')
 ylabel('p(correct)')
 
 %% Group fits do not work well, but individual fits may:

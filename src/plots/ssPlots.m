@@ -17,13 +17,17 @@ B2=findgroups(abs(trialData.pertSize)); %pertSize>0 means vR>vL
 pp2=unique(abs(trialData.pertSize));
 colorOff=3;
 
-%% Fourth plot: steady-state as function of perturbation size
+%% First plot: steady-state as function of perturbation size
 subplot(2,Q,1:2)
 %scatter(trialData.pertSize,trialData.lastSpeedDiff,10,zeros(1,3))
 %hold on
-fun=@nanmedian;
-S4=splitapply(fun,trialData.lastSpeedDiff,B);
-s1=scatter(trialData.pertSize,trialData.lastSpeedDiff,5,.5*ones(1,3),'filled');
+fun=@nanmean;
+Ba=B(correctResponses |nullTrials,:); %Correct only
+Ba=B; %All responses
+Ya=trialData.lastSpeedDiff(correctResponses | nullTrials,:);
+Ya=trialData.lastSpeedDiff; %All responses
+S4=splitapply(fun,Ya,Ba);
+%s1=scatter(trialData.pertSize,trialData.lastSpeedDiff,5,.5*ones(1,3),'filled');
 hold on
 s2=scatter(pp,S4,70,pp,'filled');
 grid on
@@ -32,14 +36,14 @@ xlabel('vL>vR      PERTURBATION         vL<vR')
 axis([-360 360 -150 150])
 hold on
 
-y=monoLS(S4);
+%y=monoLS(S4);
 %plot(pp,y,'k')
-y=splitapply(@nanmean,trialData.lastSpeedDiff,B);
-p1=plot(pp,y,'k');
-y2=splitapply(@(x) nanstd(x)/sqrt(numel(x)),trialData.lastSpeedDiff,B);
+y=splitapply(@nanmean,Ya,Ba);
+%p1=plot(pp,y,'k');
+y2=splitapply(@(x) nanstd(x)/sqrt(numel(x)),Ya,Ba); %ste
 ptc=patch([pp' fliplr(pp')],[y'+y2' fliplr(y'-y2')],.5*ones(1,3),'FaceAlpha',.3,'EdgeColor','none');
 uistack(ptc,'bottom')
-legend([s1 s2 p1],{'Indiv. trials','Median','Mean \pm ste'},'Location','NorthWest')
+legend([s2 ptc],{'Mean','ste'},'Location','NorthWest')
 
 % subplot(2,Q,[1:2]+Q)
 % S=splitapply(@nanmedian,trialData.lastSpeedDiff,B); 
@@ -52,7 +56,7 @@ legend([s1 s2 p1],{'Indiv. trials','Median','Mean \pm ste'},'Location','NorthWes
 % scatter(pp(pp>0),S(pp>0),20,cmap(end,:),'filled')
 % scatter(abs(pp(pp<0)),-S(pp<0),20,cmap(1,:),'filled')
 
-%% Sixth plot: clicking rates
+%% Second plot: clicking rates
 subplot(2,Q,3:4)
 fun=@mean;
 fun=@median;
@@ -118,7 +122,7 @@ text(420,40,removeTags(evalc('mm.disp')),'FontSize',9,'Clipping','off')
 mm1=fitlm(X,'netClicks~incorrectResponse:pertSize+pertSize-1');%,'Distribution','normal','Link','logit','DispersionFlag',true); %Logisitc regression, excluding null responses
 text(420,7,removeTags(evalc('mm1.disp')),'FontSize',9,'Clipping','off')
 hold on
-plot([-350 0 350],[350 0 350]*mm1.Coefficients.Estimate(2),'r','DisplayName','Best LM fit')
+plot([-350 0 350],[350 0 350]*mm1.Coefficients.Estimate(2),'k','DisplayName','Best LM fit','LineWidth',2)
 mm=fitlm(X,'netClicks~earlyNetClicks+pertSize-1')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 text(420,-17,removeTags(evalc('mm.disp')),'FontSize',9,'Clipping','off')
 
@@ -150,6 +154,7 @@ text(-1400,-45,regexprep(removeTags(evalc('mm.disp')),'model:\n','model: \n'),'F
 subplot(2,Q,1:2)
 hold on
 mm=fitlm(X,'lastSpeedDiff~pertSize')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
-plot([-350 0 350],[-350 0 350]*mm.Coefficients.Estimate(2),'r','DisplayName','Best LM fit')
+p1=plot([-350 0 350],[-350 0 350]*mm.Coefficients.Estimate(2),'k','DisplayName','Best LM fit','LineWidth',2);
+uistack(p1,'bottom')
 end
 

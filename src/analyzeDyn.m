@@ -4,7 +4,9 @@
 dataDir='../data/';
 subList=dir([dataDir 'AB*']);
 %% Load fast & slow baseline trials
-for j=1:length(subList)
+sL=1:10;
+sL=[1:7,9,10]; %Excluding subj 8
+for j=sL
         b1=readtable([dataDir subList(j).name '/Baseline1.csv']); %Short response time task (8 strides!)
         b1.blockNo=ones(size(b1,1),1);
         b1.subID=j*ones(size(b1,1),1);
@@ -48,10 +50,10 @@ ylabel('Left choice (%)')
 
 subplot(2,2,2) %Clickrates
 S=splitapply(@(x) mean(x),allT.Lclicks-allT.Rclicks,B); 
-scatter(pp,S,50,pp,'filled')
+scatter(pp,S,50,pp,'filled') %Fast baseline
 hold on
 S1=splitapply(@(x) mean(x),allT1.Lclicks-allT1.Rclicks,B1);  %Does this mean that subjects are better at the short task? Is it the urgency? Or they being used to the task?
-scatter(pp1,S1,20,.4*ones(1,3),'filled')
+scatter(pp1,S1,20,.4*ones(1,3),'filled') %Slow baseline
 grid on
 title('Net clicks')
 
@@ -75,16 +77,16 @@ hold on;
 plot([-200 200],[-200 200],'k--')
 %p=fitPsycho(pp,S);
 alpha=1;%1.4;
-k1=100*(1/75).^alpha; %projection constant. I presume from baseline data that subjects that correct 125mm/s had a PSE actually of 200mm/s away from the starting point
-%plot(k1*nonlin([-200:200],alpha),[-200:1:200],'r')
-plot([-200:200],300*(psycho([0,85],[-200:200])-.5),'r')
+k1=100*(1/75).^alpha; %projection constant. I presume from baseline data that subjects that correct 150mm/s had a PSE actually of 200mm/s away from the starting point
+plot(k1*nonlin([-200:200],alpha),[-200:1:200],'r')
+%plot([-200:200],300*(psycho([0,85],[-200:200])-.5),'r')
 grid on
 title('Total correction (mm/s)')
 xlabel('Init diff (mm/s)')
 ylabel('Corrected amount')
 
 %% Get adapt trials
-for j=1:length(subList)
+for j=sL
     td=readtable([dataDir subList(j).name '/Adaptation.csv']);
     if j>1
        allTA=[allTA;td];
@@ -93,7 +95,7 @@ for j=1:length(subList)
     end
 end
 %% Get post trials
-for j=1:length(subList)
+for j=sL
     td=readtable([dataDir subList(j).name '/PostAdaptation.csv']);
     if j>1
        allTP=[allTP;td];
@@ -136,34 +138,39 @@ allTA.netClicks=allTA.Lclicks-allTA.Rclicks;
 allT.netClicks=allT.Lclicks-allT.Rclicks;
 allTP.netClicks=allTP.Lclicks-allTP.Rclicks;
 colors=get(gca,'ColorOrder');
+%colors=zeros(size(colors));
 mK=4;
+%allT=allT(~isnan(allT.initialResponse),:);
+%allTA=allTA(~isnan(allTA.initialResponse),:);
+%allTP=allTP(~isnan(allTP.initialResponse),:);
+names={'Reported PSE','Estimated PSE','Net keypresses','Reaction Time'};
 for k=1:mK
     v=allTA.(vars{k});
     vB=allT.(vars{k});
     vP=allTP.(vars{k});
 
-    subplot(mK,1,k)
+    subplot(mK,3,[2:3]+k*3-3)
     hold on
     %Adapt:
     aux=mod([1:length(allTA.startTime)]-1,19);
     pp=unique(allTA.pertSize);
+    pp=200;
     for j=1:length(pp)
-    scatter(aux(allTA.pertSize==pp(j)),v(allTA.pertSize==pp(j)),50,colors(pp(j)/100+3,:))
+        x=aux(allTA.pertSize==pp(j));
+        y=v(allTA.pertSize==pp(j));
+        %scatter(x,y,10,.4*ones(1,3),'filled')
+        x=reshape(x,11,9);
+        y=reshape(y,11,9);
+        %plot(x,y,'Color',.4*ones(1,3))
     end
     %scatter(aux(allTA.pertSize==400),v(allTA.pertSize==400),50,[0,0,1])
     for i=0:18 %19 repetitions of the task
-        scatter(i,func(v(aux==i)),100,colors(allTA.pertSize(i+1)/100 + 3,:),'filled')
+        %if allTA.pertSize(i+1)==200
+            ss(i+1)=scatter(i,func(v(aux==i)),50,colors(allTA.pertSize(i+1)/100 + 3,:),'filled','DisplayName',['Init. \Delta v=' num2str(allTA.pertSize(i+1))]);
+            errorbar(i,func(v(aux==i)),nanstd(v(aux==i))/sqrt(sum((aux==i))),'Color','k')
+        %end
     end
-    
-    %Base:
-    pp=unique(allT.pertSize);
-    for j=1:length(pp)
-        scatter(-10+j,func(vB(allT.pertSize==pp(j))),100,colors(pp(j)/100+3,:),'filled')
-        scatter((-10+j)*ones(sum(allT.pertSize==pp(j)),1),(vB(allT.pertSize==pp(j))),50,colors(pp(j)/100+3,:))
-    end
-    %scatter(-2,func(vB(allT.pertSize==200)),100,[.7,.2,0],'filled')
-    %scatter(-2*ones(sum(allT.pertSize==200),1),vB(allT.pertSize==200),50,[.7,.2,0])
-    
+   
     %Paraphernalia
     axis tight
     pp=patch([.8 17.8 17.8 .8],[min(v)*[1 1] max(v)*[1 1]],.6*ones(1,3),'FaceAlpha',.3,'EdgeColor','none');
@@ -176,21 +183,49 @@ for k=1:mK
     pp=unique(allTP.pertSize);
     pp=pp(1:4);
     for j=1:length(pp)
-        scatter(aux(allTP.pertSize==pp(j)),vP(allTP.pertSize==pp(j)),50,colors(pp(j)/100+3,:))
+        %scatter(aux(allTP.pertSize==pp(j)),vP(allTP.pertSize==pp(j)),10,.4*ones(1,3),'filled')
     end
     for i=19:13+19
-        scatter(i,func(vP(aux==i)),100,colors(allTP.pertSize(i-18)/100 + 3,:),'filled')
+        ss(i+1)=scatter(i,func(vP(aux==i)),50,colors(allTP.pertSize(i-18)/100 + 3,:),'filled','DisplayName',['Init. \Delta v=' num2str(allTP.pertSize(i-18))]);
+        %scatter(i,func(vP(aux==i)),50,'k','filled')
+        errorbar(i,func(vP(aux==i)),nanstd(vP(aux==i))/sqrt(sum((aux==i))),'Color','k')
     end
     %for i=0:12
     %    scatter(i,func(vP(aux==i)),100,colors(allTP.pertSize(i+1)/100 + 3,:),'filled')
     %end
+    set(gca,'XTick',[-8,10,25],'XTickLabel',{'Baseline','Adapt','Post'})
+    if k==1
+        legend(ss([1,3,20,21,28]))
+    end
+    title(names{k})
+    if k<=2
+        ylabel('\Delta v (mm/s)')
+    end 
+    
+    subplot(mK,3,1+k*3-3)
+    %Base:
+    hold on
+    pp=unique(allT.pertSize);
+    for j=1:length(pp)
+        %scatter(-10+j,func(vB(allT.pertSize==pp(j))),50,colors(pp(j)/100+3,:),'filled')
+        scatter(-10+j,func(vB(allT.pertSize==pp(j))),50,'k','filled')
+        %scatter((-10+j)*ones(sum(allT.pertSize==pp(j)),1),(vB(allT.pertSize==pp(j))),10,.4*ones(1,3),'filled')
+        errorbar(j-10,func(vB(allT.pertSize==pp(j))),nanstd(vB(allT.pertSize==pp(j)))/sqrt(sum(allT.pertSize==pp(j))),'Color','k')
+    end
+    title('Baseline performance')
+    
+    set(gca,'XTick',[-9:-5],'XTickLabel',{'-200','-100','0','100','200'})
+    grid on
+    xlabel('Init. \Delta v')
+    %scatter(-2,func(vB(allT.pertSize==200)),100,[.7,.2,0],'filled')
+    %scatter(-2*ones(sum(allT.pertSize==200),1),vB(allT.pertSize==200),50,[.7,.2,0])
 end
 
-
+%saveFig(fh,'../fig/alldyn/','timecourse',0)
 %% Find temporal decay during post-adapt
 figure; 
 vars={'projectedPSE','lastSpeedDiff','projectedPSE2'};
-load dynamicProfiles.mat %Storage for dynamic profiles
+load dynamicProfiles.mat %Storage for dynamic profiles: need to change to csv
 firstResponseStrideA=find(isnan(vL(2:end)) & ~isnan(vL(1:end-1)));
 firstResponseStrideP=length(vL)+find(isnan(vLp(2:end)) & ~isnan(vLp(1:end-1)));
 taskInd=[firstResponseStrideA; firstResponseStrideP];

@@ -1,4 +1,4 @@
-function fh=accPlots(trialData)
+function [fh,fh2]=accPlots(trialData)
 colorOff=3;
 %%
 B=findgroups(trialData.pertSize); %pertSize>0 means vR>vL
@@ -27,8 +27,8 @@ trialData.incorrectResponses=trialData.initialResponse==sign(trialData.pertSize)
 
 %Creating a (modified) subject ID field: %See comment at end about ANOVA
 aux=trialData.subID;
-aux(aux==1)=10;
-aux(aux==4)=1;
+%aux(aux==1)=10;
+%aux(aux==4)=1;
 trialData.ID=categorical(aux);
 
 %% First figure: global stats
@@ -38,20 +38,20 @@ Q=6;
 %% First 3 plots: some summary stats
 subplot(5,3,1)
 c=[sum(trialData.pertSize<0) sum(trialData.nullTrials) sum(trialData.pertSize>0) ]/numel(trialData.nullTrials);
-bar(3,c(:,1),'FaceColor',cmap(end-colorOff+1,:))
+bar(3,c(:,1),'FaceColor',cmap(end-colorOff+1,:),'EdgeColor','none')
 hold on
-bar(2,c(:,2),'FaceColor',cmap(round(size(cmap,1)/2),:))
-bar(1,c(:,3),'FaceColor',cmap(colorOff,:))
+bar(2,c(:,2),'FaceColor',cmap(round(size(cmap,1)/2),:),'EdgeColor','none')
+bar(1,c(:,3),'FaceColor',cmap(colorOff,:),'EdgeColor','none')
 set(gca,'XTick',1:3,'XTickLabel',{'vL>vR','NT','vL<vR'},'YLim',[0 .5])
 title('Trial decomposition')
 grid on
 
 subplot(5,3,2)
 d=[sum(trialData.initialResponse==1 & trialData.nullTrials) sum(trialData.initialResponse==-1 & trialData.nullTrials)  sum(trialData.noResponse & trialData.nullTrials)]/sum(trialData.nullTrials);
-bar(1,d(:,1),'FaceColor',cmap(colorOff,:))
+bar(1,d(:,1),'FaceColor',cmap(colorOff,:),'EdgeColor','none')
 hold on
-bar(2,d(:,2),'FaceColor',cmap(end-colorOff+1,:))
-bar(3,d(:,3),'FaceColor',cmap(round(size(cmap,1)/2),:))
+bar(2,d(:,2),'FaceColor',cmap(end-colorOff+1,:),'EdgeColor','none')
+bar(3,d(:,3),'FaceColor',cmap(round(size(cmap,1)/2),:),'EdgeColor','none')
 hold on
 set(gca,'XTick',1:3,'XTickLabel',{'>','<','NR'})
 title('Null trial responses')
@@ -62,10 +62,10 @@ d=[sum(trialData.correctResponses) sum(trialData.incorrectResponses)  sum(trialD
 dN=[sum(trialData.noResponse) sum(trialData.nullTrials)]/numel(trialData.nullTrials);
 d2=[sum(trialData.correctResponses & (trialData.pertSize<0))/sum(trialData.pertSize<0)];
 d3=sum(trialData.correctResponses & (trialData.pertSize>0))/sum(trialData.pertSize>0);
-bar(1:3,d,'FaceColor',.4*ones(1,3))
+bar(1:3,d,'FaceColor',.4*ones(1,3),'EdgeColor','none')
 hold on
-b=bar([6],[d2]','FaceColor',cmap(end-colorOff+1,:));
-b=bar([5],[d3]','FaceColor',cmap(colorOff,:));
+b=bar([6],[d2]','FaceColor',cmap(end-colorOff+1,:),'EdgeColor','none');
+b=bar([5],[d3]','FaceColor',cmap(colorOff,:),'EdgeColor','none');
 set(gca,'XTick',1:6,'XTickLabel',{'OK','BAD','NR','','>','<'})
 grid on
 title('Non-null trial accuracy')
@@ -142,7 +142,8 @@ p=binocdf(accuracy.*Ntrials,Ntrials,.5,'upper'); %Single tail, as we only care w
 trialData.absPertSize=abs(trialData.pertSize);
 trialData.absPertDiffToPrev=abs(trialData.pertSize-trialData.prevSize);
 trialData.absPertDiffToLastSS=abs(trialData.pertSize-trialData.prevFinalSpeed);
-trialData.sqrtAbsPertSize=(trialData.absPertSize).^.75;
+diffFun=@(x) .3.*(350./x).^.75;
+trialData.sqrtAbsPertSize=1./diffFun(trialData.absPertSize);
 X=trialData(~trialData.noResponse & ~trialData.nullTrials,:); %Table of trials with NR removed
 mm1=fitglm(X,'correctResponses~absPertSize+absPertDiffToLastSS-1','Distribution','binomial');
 mm3=fitglm(X,'correctResponses~sqrtAbsPertSize-1','Distribution','binomial'); %Dropping non-sig terms
@@ -179,27 +180,27 @@ legend({'Group data','Group fit','Individual fits','Reported threshold'},'Locati
 
 %% Second figure: block/learning effects & subject effects
 
-figure
+fh2=figure('Units','Normalized','OuterPosition',[0 .5 .5 .5]);
 %% Third plot: compare accuracy in odd/even and first/second blocks
 
-subplot(2,Q,Q+1) %Block number comparison
+subplot(1,3,1) %Block number comparison
 for k=1:4 %Block number
 trialData1=trialData(trialData.blockNo==k & trialData.pertSize~=0,:); %Non-null trials only
 correctResponses2=trialData1.initialResponse==-sign(trialData1.pertSize); %Negative response means LEFT IS SLOW (RIGHT IS FAST) choice
-m=mean(correctResponses2);
-s=std(correctResponses2)/sqrt(numel(correctResponses2));
-bar(k,m)
-hold on 
-errorbar(k,m,s)
-grid on
+m(k)=mean(correctResponses2);
+s(k)=std(correctResponses2)/sqrt(numel(correctResponses2));
 end
+bar(1:4,m,'EdgeColor','none')
+hold on 
+errorbar(1:4,m,s,'Color','k','LineStyle','none','LineWidth',2)
+grid on
 axis([0 5 .5 1])
 xlabel('Block No')
 set(gca,'XTick',1:4)
 title('Block effect')
 ylabel('% Correct')
 
-subplot(2,Q,Q+2) %Individual subject x block comparison
+subplot(1,3,2) %Individual subject x block comparison
 allM=nan(4,9);
 allS=nan(4,9);
 for j=1:9 %Subjects
@@ -208,25 +209,28 @@ for j=1:9 %Subjects
 for k=1:4 %Block number
 trialData1=trialData(trialData.blockNo==k & trialData.pertSize~=0 & trialData.subID==j,:); %Non-null trials only
 correctResponses2=trialData1.initialResponse==-sign(trialData1.pertSize); %Negative response means LEFT IS SLOW (RIGHT IS FAST) choice
-if ~isempty(correctResponses2)
-m(k)=mean(correctResponses2);
-allM(k,j)=m(k);
-s(k)=std(correctResponses2)/sqrt(numel(correctResponses2));
-allS(k,j)=s(k);
-end
+    if ~isempty(correctResponses2) %Some subjects do not have 4 blocks
+    m(k)=mean(correctResponses2);
+    allM(k,j)=m(k);
+    s(k)=std(correctResponses2)/sqrt(numel(correctResponses2));
+    allS(k,j)=s(k);
+    end
 end
 hold on 
 %errorbar([1:4]+.1*randn(1,4),m,s,'Color','k')
 plot([1:4],m,'Color','k')
+text(.8,m(1)+(j-5)*.005,num2str(j),'FontSize',7)
+idx=find(~isnan(m),1,'last');
+text(idx+.1,m(idx)+(j-5)*.005,num2str(j),'FontSize',7)
 grid on
 end
 axis([0 5 .5 1])
 xlabel('Block No')
 set(gca,'XTick',1:4)
 title('Subject x block')
-ylabel('% Correct')
+%ylabel('% Correct')
 
-subplot(2,Q,Q+3) %Individual subject comparison
+subplot(1,3,3) %Individual subject comparison
 clear m s
 for j=1:9 %Subjects
 trialData1=trialData(trialData.pertSize~=0 & trialData.subID==j,:); %Non-null trials only
@@ -235,13 +239,13 @@ m(j)=mean(correctResponses2);
 s(j)=std(correctResponses2)/sqrt(numel(correctResponses2));
 end
 hold on 
-bar(1:9,m)
-errorbar(1:9,m,s,'Color','k')
+bar(1:9,m,'EdgeColor','none')
+errorbar(1:9,m,s,'Color','k','LineStyle','none','LineWidth',2)
 grid on
 axis([0 10 .5 1])
 xlabel('Subj. ID')
 set(gca,'XTick',1:9)
-ylabel('% Correct')
+%ylabel('% Correct')
 title('Subject effect')
 
 %% Multi-factor analysis of responses:
@@ -279,9 +283,9 @@ mm1=fitglm(X,'leftResponse~pertSize*prevSize+lastSpeedDiff+blockNo*pertSize','Di
 %Reduced model removing subj 2:
 mm2=fitglm(trialData(~trialData.noResponse & trialData.ID~=trialData.ID(find(trialData.subID==2,1,'first')),:),'leftResponse~pertSize*prevSize+lastSpeedDiff+blockNo*pertSize','Distribution','binomial');
 mm3=fitglm(trialData(~trialData.noResponse & trialData.ID~=trialData.ID(find(trialData.subID==2,1,'first')),:),'leftResponse~pertSize+prevSize-1','Distribution','binomial'); %Dropping non-sig terms
-subplot(2,Q,4:5)
-hold on
-mm2.plotPartialDependence('pertSize')
+%subplot(2,Q,4:5)
+%hold on
+%mm2.plotPartialDependence('pertSize')
 text(500,-.8,removeTags(evalc('mm.disp')),'FontSize',6,'Clipping','off')
 text(-500,-.4,removeTags(evalc('mm1.disp')),'FontSize',6,'Clipping','off')
 text(-500,-1,regexprep(removeTags(evalc('mm2.disp')),'model:\n','model: (no subj 2)\n'),'FontSize',6,'Clipping','off')
