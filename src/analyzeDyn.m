@@ -1,11 +1,12 @@
 %%
 %addpath(genpath('../src/datlogManipulation/'))
 %%
+ addpath(genpath('../'))
 dataDir='../data/';
 subList=dir([dataDir 'AB*']);
 %% Load fast & slow baseline trials
 sL=1:10;
-sL=[1:7,9,10]; %Excluding subj 8
+%sL=[1:7,9,10]; %Excluding subj 8
 for j=sL
         b1=readtable([dataDir subList(j).name '/Baseline1.csv']); %Short response time task (8 strides!)
         b1.blockNo=ones(size(b1,1),1);
@@ -68,6 +69,7 @@ title('Last diff (mm/s)')
 
 subplot(2,2,4) %last speed diff reached
 nonlin=@(x,alpha) sign(x).*abs(x).^alpha;
+nonlininv=@(y,alpha) sign(y).*abs(y).^(1/alpha);
 S=splitapply(@(x) mean(x),-allT.lastSpeedDiff+allT.pertSize,B); 
 scatter(pp,S,50,pp,'filled')
 hold on
@@ -77,7 +79,7 @@ hold on;
 plot([-200 200],[-200 200],'k--')
 %p=fitPsycho(pp,S);
 alpha=1;%1.4;
-k1=100*(1/75).^alpha; %projection constant. I presume from baseline data that subjects that correct 150mm/s had a PSE actually of 200mm/s away from the starting point
+k1=110*(1/75).^alpha; %projection constant. I presume from baseline data that subjects that correct 150mm/s had a PSE actually of 200mm/s away from the starting point
 plot(k1*nonlin([-200:200],alpha),[-200:1:200],'r')
 %plot([-200:200],300*(psycho([0,85],[-200:200])-.5),'r')
 grid on
@@ -110,7 +112,9 @@ func=@(x) nanmean(x);
 allTA.leftResponse=allTA.initialResponse==-1+.5*isnan(allTA.initialResponse); %No response is coded as 50/50
 allTP.leftResponse=allTP.initialResponse==-1+.5*isnan(allTP.initialResponse); %No response is coded as 50/50
 allT.leftResponse=allT.initialResponse==-1+.5*isnan(allT.initialResponse);
-figure;
+
+fh=figure('Units','Normalized','OuterPosition',[.5 .2 .5 .8]);
+
 vars={'lastSpeedDiff','projectedPSE','leftResponse','reactionTime'}; %Variables to plot
 %Add: projection to estimate PSE, assuming that subjects undershoot the
 %real 'PSE' target. The problem with this approach is that the true PSE
@@ -133,6 +137,10 @@ allT.projectedPSE2=allT.pertSize+invpsycho(u,(allT.lastSpeedDiff-allT.pertSize)/
 
 %Add: infer initial distance to PSE from reaction times?
 
+%Get stride coordinates:
+load dynamicProfiles.mat %Storage for dynamic profiles: need to change to csv
+firstResponseStrideA=find(isnan(vL(2:end)) & ~isnan(vL(1:end-1)));
+
 
 allTA.netClicks=allTA.Lclicks-allTA.Rclicks;
 allT.netClicks=allT.Lclicks-allT.Rclicks;
@@ -143,7 +151,7 @@ mK=4;
 %allT=allT(~isnan(allT.initialResponse),:);
 %allTA=allTA(~isnan(allTA.initialResponse),:);
 %allTP=allTP(~isnan(allTP.initialResponse),:);
-names={'Reported PSE','Estimated PSE','Net keypresses','Reaction Time'};
+names={'Reported PSE','Estimated PSE','< response %','Reaction Time'};
 for k=1:mK
     v=allTA.(vars{k});
     vB=allT.(vars{k});
@@ -159,21 +167,27 @@ for k=1:mK
         x=aux(allTA.pertSize==pp(j));
         y=v(allTA.pertSize==pp(j));
         %scatter(x,y,10,.4*ones(1,3),'filled')
-        x=reshape(x,11,9);
-        y=reshape(y,11,9);
+        x=reshape(x,numel(x)/length(sL),length(sL));
+        y=reshape(y,numel(x)/length(sL),length(sL));
         %plot(x,y,'Color',.4*ones(1,3))
     end
     %scatter(aux(allTA.pertSize==400),v(allTA.pertSize==400),50,[0,0,1])
     for i=0:18 %19 repetitions of the task
         %if allTA.pertSize(i+1)==200
-            ss(i+1)=scatter(i,func(v(aux==i)),50,colors(allTA.pertSize(i+1)/100 + 3,:),'filled','DisplayName',['Init. \Delta v=' num2str(allTA.pertSize(i+1))]);
-            errorbar(i,func(v(aux==i)),nanstd(v(aux==i))/sqrt(sum((aux==i))),'Color','k')
+        if false %k==2
+             ss(i+1)=scatter(firstResponseStrideA(i+1),func(v(aux==i)),50,'k','filled','DisplayName',['Probe =' num2str(allTA.pertSize(i+1))]);
+        else
+            ss(i+1)=scatter(firstResponseStrideA(i+1),func(v(aux==i)),50,colors(allTA.pertSize(i+1)/100 + 3,:),'filled','DisplayName',['Probe =' num2str(allTA.pertSize(i+1))]);
+        end
+        errorbar(firstResponseStrideA(i+1),func(v(aux==i)),nanstd(v(aux==i))/sqrt(sum((aux==i))),'Color','k')
         %end
     end
    
     %Paraphernalia
     axis tight
-    pp=patch([.8 17.8 17.8 .8],[min(v)*[1 1] max(v)*[1 1]],.6*ones(1,3),'FaceAlpha',.3,'EdgeColor','none');
+    aStart=find((vR-vL)==500,1,'first');
+    aEnd=find((vR-vL)==500,1,'last');
+    pp=patch([aStart aEnd aEnd aStart],[min([v;vP])*[1 1] max([v;vP])*[1 1]],.6*ones(1,3),'FaceAlpha',.3,'EdgeColor','none');
     uistack(pp,'bottom')
     grid on
     title(vars{k})
@@ -185,10 +199,14 @@ for k=1:mK
     for j=1:length(pp)
         %scatter(aux(allTP.pertSize==pp(j)),vP(allTP.pertSize==pp(j)),10,.4*ones(1,3),'filled')
     end
-    for i=19:13+19
-        ss(i+1)=scatter(i,func(vP(aux==i)),50,colors(allTP.pertSize(i-18)/100 + 3,:),'filled','DisplayName',['Init. \Delta v=' num2str(allTP.pertSize(i-18))]);
+    for i=19:12+19
+        if false %k==2
+            ss(i+1)=scatter(firstResponseStrideP(i-18),func(vP(aux==i)),50,'k','filled','DisplayName',['Probe =' num2str(allTP.pertSize(i-18))]);
+        else
+            ss(i+1)=scatter(firstResponseStrideP(i-18),func(vP(aux==i)),50,colors(allTP.pertSize(i-18)/100 + 3,:),'filled','DisplayName',['Probe =' num2str(allTP.pertSize(i-18))]);
+        end
         %scatter(i,func(vP(aux==i)),50,'k','filled')
-        errorbar(i,func(vP(aux==i)),nanstd(vP(aux==i))/sqrt(sum((aux==i))),'Color','k')
+        errorbar(firstResponseStrideP(i-18),func(vP(aux==i)),nanstd(vP(aux==i))/sqrt(sum((aux==i))),'Color','k')
     end
     %for i=0:12
     %    scatter(i,func(vP(aux==i)),100,colors(allTP.pertSize(i+1)/100 + 3,:),'filled')
@@ -207,21 +225,32 @@ for k=1:mK
     hold on
     pp=unique(allT.pertSize);
     for j=1:length(pp)
-        %scatter(-10+j,func(vB(allT.pertSize==pp(j))),50,colors(pp(j)/100+3,:),'filled')
-        scatter(-10+j,func(vB(allT.pertSize==pp(j))),50,'k','filled')
+        if false %k==1
+        scatter(pp(j),func(vB(allT.pertSize==pp(j))),50,colors(pp(j)/100+3,:),'filled')
+        else
+        scatter(pp(j),func(vB(allT.pertSize==pp(j))),50,'k','filled')
+        end
         %scatter((-10+j)*ones(sum(allT.pertSize==pp(j)),1),(vB(allT.pertSize==pp(j))),10,.4*ones(1,3),'filled')
-        errorbar(j-10,func(vB(allT.pertSize==pp(j))),nanstd(vB(allT.pertSize==pp(j)))/sqrt(sum(allT.pertSize==pp(j))),'Color','k')
+        errorbar(pp(j),func(vB(allT.pertSize==pp(j))),nanstd(vB(allT.pertSize==pp(j)))/sqrt(sum(allT.pertSize==pp(j))),'Color','k')
     end
     title('Baseline performance')
     
-    set(gca,'XTick',[-9:-5],'XTickLabel',{'-200','-100','0','100','200'})
+    set(gca,'XTick',[-200:100:200],'XTickLabel',{'-200','-100','0','100','200'},'XLim',[-250 250])
     grid on
-    xlabel('Init. \Delta v')
+    xlabel('Probe (mm/s)')
+    if k==1
+        %Adding the baseline fit curve
+        x=[-200:100:200];
+        y=x+nonlininv(-x,alpha)/k1;
+        p1=plot(x,y,'Color',.5*ones(1,3),'LineWidth',2);
+        uistack(p1,'bottom')
+        
+    end
     %scatter(-2,func(vB(allT.pertSize==200)),100,[.7,.2,0],'filled')
     %scatter(-2*ones(sum(allT.pertSize==200),1),vB(allT.pertSize==200),50,[.7,.2,0])
 end
 
-%saveFig(fh,'../fig/alldyn/','timecourse',0)
+saveFig(fh,'../fig/alldyn/','timecourse',0)
 %% Find temporal decay during post-adapt
 figure; 
 vars={'projectedPSE','lastSpeedDiff','projectedPSE2'};

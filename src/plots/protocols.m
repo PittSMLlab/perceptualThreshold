@@ -16,11 +16,11 @@ end
 p1=plot(v,'LineWidth',2,'DisplayName','Set speeds');
 p2=plot(sst,pS,'o','MarkerFaceColor','red','MarkerEdgeColor','none','DisplayName','Probe start');
 for i=1:length(pS)
-   pp=patch([sst(i) eet(i) eet(i) sst(i)],400*[-1 -1 1 1],.6*ones(1,3),'EdgeColor','none','FaceAlpha',.6,'DisplayName','Task')
+   pp=patch([sst(i) eet(i) eet(i) sst(i)],400*[-1 -1 1 1],.85*ones(1,3),'FaceAlpha',.9,'EdgeColor','none','FaceAlpha',.6,'DisplayName','Task')
     uistack(pp,'bottom')
 end
 set(gca,'XLim',[0 max(eet)+10])
-legend([p1 pp],'Location','North')
+legend([p1 pp p2],'Location','North')
 ylabel('Belt speed difference (mm/s)')
 xlabel('Stride cycles')
 title('Perceptual assessment protocol')
@@ -54,11 +54,11 @@ p1=plot(v,'LineWidth',2,'DisplayName','Set speeds');
 hold on
 p2=plot(sst,pps,'o','MarkerFaceColor','red','MarkerEdgeColor','none','DisplayName','Probe start');
 for i=1:length(pps)
-   pp=patch([sst(i) eet(i) eet(i) sst(i)],500*[-1 -1 1 1],.6*ones(1,3),'EdgeColor','none','FaceAlpha',.6,'DisplayName','Task')
+   pp=patch([sst(i) eet(i) eet(i) sst(i)],500*[-1 -1 1 1],.85*ones(1,3),'EdgeColor','none','FaceAlpha',.6,'DisplayName','Task')
     uistack(pp,'bottom')
 end
 set(gca,'XLim',[0 max(eet)+10],'YLim',[-300 500])
-legend([p1 pp],'Location','South')
+legend([p1 p2 pp],'Location','South')
 ylabel('Belt speed difference (mm/s)')
 xlabel('Stride cycles')
 title('Perceptual assessment protocol')

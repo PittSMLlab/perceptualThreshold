@@ -124,7 +124,7 @@ pp2=unique(abs(trialData.pertSize));
 accuracy=splitapply(@(x) (sum(x))/length(x),trialData.correctResponses+.5*trialData.noResponse,B2); %Counting LEFT IS SLOW choices + half of NR
 accuracy=splitapply(@(x) nansum(x)/sum(~isnan(x)),trialData.correctResponses.*abs(trialData.initialResponse),B2); %Not counting NR trials at all
 accuracy(1)=NaN; %No definition of accuracy for null-trials
-scatter(pp2,accuracy,50,0*ones(1,3),'filled')
+s1=scatter(pp2,accuracy,50,0*ones(1,3),'filled');
 grid on
 ylabel('% correct') 
 xlabel('(abs.) probe size (mm/s)')
@@ -149,14 +149,14 @@ mm1=fitglm(X,'correctResponses~absPertSize+absPertDiffToLastSS-1','Distribution'
 mm3=fitglm(X,'correctResponses~sqrtAbsPertSize-1','Distribution','binomial'); %Dropping non-sig terms
 mm2=fitglm(X,'correctResponses~absPertSize-1','Distribution','binomial'); %Dropping non-sig terms
 y3=mm3.predict(trialData(1:24,:));
-plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k','LineWidth',2)
+p1=plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k','LineWidth',2);
 y3=mm2.predict(trialData(1:24,:));
 %plot(sort(trialData(1:24,:).absPertSize),sort(y3),'k--','LineWidth',2)
 Nsubs=unique(trialData.ID);
 for i=1:length(Nsubs)
    mm=fitglm(X(X.ID==Nsubs(i),:),'correctResponses~sqrtAbsPertSize-1','Distribution','binomial');
    y3=mm.predict(trialData(1:24,:));
-   plot(sort(trialData(1:24,:).absPertSize),sort(y3),'Color',.4*ones(1,3));
+   p2=plot(sort(trialData(1:24,:).absPertSize),sort(y3),'Color',.4*ones(1,3));
    %text(360,max(y3),num2str(i),'FontSize',6)
 end
 %mm2.plotPartialDependence('absPertSize')
@@ -175,8 +175,8 @@ ylabel('% correct')
 xlabel('abs. probe size (mm/s)')
 set(gca,'XLim',[0 350])
 title('Accuracy vs. probe size')
-plot(.13*[1 1]*1050,[.5 1],'k--')
-legend({'Group data','Group fit','Individual fits','Reported threshold'},'Location','SouthEast')
+p3=plot(.13*[1 1]*1050,[.5 1],'k--');
+legend([s1 p1 p2 p3],{'Group data','Group fit','Individual fits','Reported threshold'},'Location','SouthEast')
 
 %% Second figure: block/learning effects & subject effects
 
