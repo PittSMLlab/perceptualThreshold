@@ -1,68 +1,59 @@
-function [params,predictedY,logL] = fitPsycho(x,y,mode)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-
+function [params,predictedY,logL] = fitPsycho(x,y,mode,fixedBias)
 %Model:
 %p(y_i) = 1- 1/(1+exp((x_i-mu)/sigma))
+%Fitted through max likelihood (MLE), min squared error (MSE), or min L1
+%distance (MAE). 
+
 
 if nargin<3 || isempty(mode)
     mode='MLE';
+end
+if nargin<4
+    fixedBias=[];
 end
 %Check: both x and y are column vectors:
 x=reshape(x,length(x),1);
 y=reshape(y,length(y),1);
 
-options = optimoptions('fminunc','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunctionEvaluations',1e4); %The gradient
+%options = optimoptions('fminunc','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunctionEvaluations',1e4); %The gradient
+options = optimoptions('fmincon','Display','off','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunEvals',1e4); %The gradient
+  
 u0=[nanmean(x),nanstd(x)];
+lb=[-Inf 0];
+ub=[Inf Inf];
 switch mode
-    case 'MLE'
-        %This mode assumes the variables 'y' are BINARY and fits the model
-        %which results in the highest likelihood of the observed data
-        params = fminunc(@(u) MLE(u,x,y),u0,options);
-        f1=psycho(params,x);
-        %Likelihood=prod(y.*(ff) + (1-y).*(1-ff));
-         %logL=sum(log(y.*(ff) + (1-y).*(1-ff)));
-         logL=sum(y.*log0(f1) + (1-y).*log0(1-f1));
-    case 'MSE'
-        %This mode accepts continuous variables distributed in the 0-1 range 
-        %(not just binary) and assumes they are measurements of 'p'
-        %directly, fitting the best curve
-        
-        params = fminunc(@(u) MSE(u,x,y),u0,options);
-    case 'MAE'
-        %L1 norm distance minimization
-        params = fminunc(@(u) MAE(u,x,y),u0,options);
-        %L1 norm minimzation just returns a
-%very tight psychom function, as it is minimized by choosing a function
-%that is exactly 1 at speeds where p>.5 and 0 at speeds where p<.5, not
-%quite sure what would happen if the empirical data did not show a
-%monotonic increase with p
     case 'MLEsat'
         u0=[u0 .9];
-        options = optimoptions('fmincon','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunEvals',1e4); %The gradient
-        params = fmincon(@(u) MLE(u,x,y),u0,[],[],[],[],[-Inf -Inf 0],[Inf Inf .2],[],options);
-        %pause
-        f1=psycho(params,x);
-        %Likelihood=prod(y.*(ff) + (1-y).*(1-ff));
-        logL=sum(y.*log0(f1) + (1-y).*log0(1-f1));
-        %logL=sum(log(y.*(ff) + (1-y).*(1-ff)));
+        params = fmincon(@(u) MLE(u,x,y),u0,[],[],[],[],[lb 0],[ub .2],[],options);
+    otherwise %MLE, MSE, or MAE
+        eval(['fun=@(u) ' mode '(u,x,y);']); 
+        if isempty(fixedBias)
+            params = fmincon(fun,u0,[],[],[],[],lb,ub,[],options);
+        else
+           f2=@(u) fun([fixedBias u]);
+           params = fmincon(f2,u0(2),[],[],[],[],lb,ub,[],options);
+           params=[fixedBias params];
+        end
 end
 predictedY=psycho(params,x);
+logL=sum(y.*log0(predictedY) + (1-y).*log0(1-predictedY));
 
-function [f,g] = MSE(u,x,y) %Defining loss function for MSE estimation
+end
+
+function [f] = MSE(u,x,y) %Defining loss function for MSE estimation
     [ff,gg]=psycho(u,x);
     f=sum((y-ff).^2);
     g = sum(bsxfun(@times,2*(y-1./(1+exp((x-u(1))/u(2)))),gg),1);
 end
 
-function [f,g] = MAE(u,x,y) %Defining loss function for MAE estimation
+function [f] = MAE(u,x,y) %Defining loss function for MAE estimation
     [ff,gg]=psycho(u,x);
     f=sum(abs(y-ff));
     g = sum(bsxfun(@times,-sign(y-1./(1+exp((x-u(1))/u(2)))),gg),1);
 end
 
-function [f,g] = MLE(u,x,y) %Defining loss function for MLE
-    [ff,gg]=psycho(u,x);
+function [f] = MLE(u,x,y) %Defining loss function for MLE
+    [ff,~]=psycho(u,x);
     %Linear comb:
     %f=-sum(log(y.*(ff) + (1-y).*(1-ff))); %log-likelihood actually
     %g=-1*sum(bsxfun(@times,(2*y -1)./(y.*(ff) + (1-y).*(1-ff)),gg),1);
@@ -73,21 +64,10 @@ function [f,g] = MLE(u,x,y) %Defining loss function for MLE
     
 end
 
-    function l=log0(x)
-       if x~=0
-           l=log(x);
-       else
-           l=-Inf;
-       end
-    end
-% function [f,g] =MLEsat(u,x,y)
-%     [ff,gg]=psycho(u,x);
-%     th=u(3);
-%     ff(ff>(1-th))=1-th;
-%     ff(ff<th)=th;
-%     f=-sum(log(ff.^y .* (1-ff).^(1-y)));
-%     g=zeros(length(f),2); %Doxy
-% end
-
+function l=log0(x)
+   if x~=0
+       l=log(x);
+   else
+       l=-Inf;
+   end
 end
-

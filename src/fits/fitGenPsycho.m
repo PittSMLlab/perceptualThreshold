@@ -1,4 +1,4 @@
-function [params, predictedY, Likelihood] = fitGenPsycho(x,y,method)
+function [params, predictedY, Likelihood] = fitGenPsycho(x,y,method,fixedBias)
 %Fits the bets fit function of the form (generalized psychometric):
 %y=1/1+exp(z), where z=(x^alpha-u)/s;
 %The strategy is a greedy search over alpha: for each possible value, we
@@ -10,6 +10,9 @@ function [params, predictedY, Likelihood] = fitGenPsycho(x,y,method)
 if nargin<3 || isempty(method)
     method='MLE';
 end
+if nargin<4
+    fixedBias=[];
+end
 %Check: both x and y are column vectors:
 x=reshape(x,length(x),1);
 y=reshape(y,length(y),1);
@@ -19,10 +22,10 @@ x=x(~missingObs);
 y=y(~missingObs);
 
 %Define options:
-options = optimoptions('fminunc','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunctionEvaluations',1e2); %The gradient
+options = optimoptions('fminunc','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunctionEvaluations',1e4); %The gradient
 
 %Optimize:
-alpha = fmincon(@(alpha) -getThirdOutput(@(v) fitPsycho(nonlin(x,v),y,method),alpha),.9,[],[],[],[],0,[],[],options);
+alpha = fmincon(@(alpha) -getThirdOutput(@(v) fitPsycho(nonlin(x,v),y,method,fixedBias),alpha),.9,[],[],[],[],0,[],[],options);
 [params,predictedY,Likelihood]=fitPsycho(nonlin(x,alpha),y,method);
 params=[params alpha];
 end
