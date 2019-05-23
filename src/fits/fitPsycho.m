@@ -1,4 +1,4 @@
-function [p,peval,L] = fitPsycho(x,y,mode)
+function [params,predictedY,logL] = fitPsycho(x,y,mode)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -18,18 +18,20 @@ switch mode
     case 'MLE'
         %This mode assumes the variables 'y' are BINARY and fits the model
         %which results in the highest likelihood of the observed data
-        p = fminunc(@(u) MLE(u,x,y),u0,options);
-        ff=psycho(p,x);
-        L=prod(y.*(ff) + (1-y).*(1-ff));
+        params = fminunc(@(u) MLE(u,x,y),u0,options);
+        f1=psycho(params,x);
+        %Likelihood=prod(y.*(ff) + (1-y).*(1-ff));
+         %logL=sum(log(y.*(ff) + (1-y).*(1-ff)));
+         logL=sum(y.*log0(f1) + (1-y).*log0(1-f1));
     case 'MSE'
         %This mode accepts continuous variables distributed in the 0-1 range 
         %(not just binary) and assumes they are measurements of 'p'
         %directly, fitting the best curve
         
-        p = fminunc(@(u) MSE(u,x,y),u0,options);
+        params = fminunc(@(u) MSE(u,x,y),u0,options);
     case 'MAE'
         %L1 norm distance minimization
-        p = fminunc(@(u) MAE(u,x,y),u0,options);
+        params = fminunc(@(u) MAE(u,x,y),u0,options);
         %L1 norm minimzation just returns a
 %very tight psychom function, as it is minimized by choosing a function
 %that is exactly 1 at speeds where p>.5 and 0 at speeds where p<.5, not
@@ -38,12 +40,14 @@ switch mode
     case 'MLEsat'
         u0=[u0 .9];
         options = optimoptions('fmincon','SpecifyObjectiveGradient',false,'TolX',1e-11,'TolFun',1e-11,'MaxFunEvals',1e4); %The gradient
-        p = fmincon(@(u) MLE(u,x,y),u0,[],[],[],[],[-Inf -Inf 0],[Inf Inf .2],[],options);
+        params = fmincon(@(u) MLE(u,x,y),u0,[],[],[],[],[-Inf -Inf 0],[Inf Inf .2],[],options);
         %pause
-        ff=psycho(p,x);
-        L=prod(y.*(ff) + (1-y).*(1-ff));
+        f1=psycho(params,x);
+        %Likelihood=prod(y.*(ff) + (1-y).*(1-ff));
+        logL=sum(y.*log0(f1) + (1-y).*log0(1-f1));
+        %logL=sum(log(y.*(ff) + (1-y).*(1-ff)));
 end
-peval=psycho(p,x);
+predictedY=psycho(params,x);
 
 function [f,g] = MSE(u,x,y) %Defining loss function for MSE estimation
     [ff,gg]=psycho(u,x);
@@ -63,11 +67,19 @@ function [f,g] = MLE(u,x,y) %Defining loss function for MLE
     %f=-sum(log(y.*(ff) + (1-y).*(1-ff))); %log-likelihood actually
     %g=-1*sum(bsxfun(@times,(2*y -1)./(y.*(ff) + (1-y).*(1-ff)),gg),1);
     %Product comb: (proper way)
-    f=-sum(log(ff.^y .* (1-ff).^(1-y))); 
+    %f=-sum(log(ff.^y .* (1-ff).^(1-y))); 
+    f=-sum(y.*log0(ff) + (1-y).*log0(1-ff));
     g=[sum(y-ff)/u(2) sum((y-ff).*(x-u(1)))/u(2)^2]; %Doxy
     
 end
 
+    function l=log0(x)
+       if x~=0
+           l=log(x);
+       else
+           l=-Inf;
+       end
+    end
 % function [f,g] =MLEsat(u,x,y)
 %     [ff,gg]=psycho(u,x);
 %     th=u(3);

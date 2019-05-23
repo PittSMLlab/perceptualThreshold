@@ -20,3 +20,12 @@ saveFig(f2,'../fig/allstatic/',['EZdd'],0)
 %%
 fh=ssPlots(superSuperT);
 %saveFig(fh,'../../fig/all/',['ssAll'],0)
+
+%% Do EZ modeling:
+x=superSuperT.pertSize;
+y=superSuperT.initialResponse;
+y=superSuperT.initialResponse==-1+.5*isnan(superSuperT.initialResponse);
+
+[params, predictedY, Likelihood] = fitGenPsycho(x,y);
+params
+figure; hold on; G=findgroups(x); plot(splitapply(@(z) mean(z),x,G),splitapply(@(z) mean(z),y,G),'o'); hold on; plot(sort(x),sort(predictedY));
