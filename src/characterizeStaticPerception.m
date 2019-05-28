@@ -21,66 +21,57 @@ saveFig(f2,'../fig/allstatic/',['EZdd'],0)
 fh=ssPlots(superSuperT);
 %saveFig(fh,'../../fig/all/',['ssAll'],0)
 
-%% Do EZ modeling:
+%% EZ modeling
+clear driftRate
+superSuperT.response=1-(superSuperT.initialResponse+1)/2;
 
-Nsubs=10;
-figure; hold on; 
+%Group model:
+[pSize,driftRateA,noiseA,delayA,biasA,t73A,alphaA]=fitEZ_mine(superSuperT);
+sA=t73A/(noiseA.^2).^(1/alphaA);
+aA=accFactor(pSize,biasA,sA,alphaA,noiseA);
+tA=delayA+rtFactor(pSize,biasA,sA,alphaA,noiseA);
+
+%Individual models:
+Nsubs=9;
+a2=0;
+t2=0;
 for i=1:Nsubs
     aux=superSuperT(superSuperT.subID==i,:); %Single subj
-    mm=fitglm(X,'leftResponse~ID*pertSize+pertSize*prevSize+blockNo*pertSize+lastSpeedDiff','Distribution','binomial'); %Logisitc regression, excluding null responses
-
-    %Get data:
-    x=aux.pertSize;
-    y=aux.initialResponse==-1+.5*isnan(aux.initialResponse);
-    acc=aux.initialResponse==-sign(aux.pertSize); %Correct responses
-    nr=isnan(aux.initialResponse); %No responses
-    nt=x==0; %Null trials
-    t=aux.reactionTime;
-    for j=1:2
-        switch j
-            case 1
-            x1=x(~nr);
-            y=y(~nr);
-            fixedBias=[];
-            case 2
-            x1=abs(x);
-            y=acc(~nr & ~nt);
-            x1=x1(~nr & ~nt);
-            fixedBias=0;
-        end
-    %[params, predictedY, Likelihood] = fitGenPsycho(x1,y,'MLE',fixedBias); %fit optimal model to signed data
-    [params, predictedY, Likelihood] = fitPsycho(x1,y,'MLE',fixedBias); %fit optimal model to signed data
-    
-    %Plot:
-    subplot(2,5,(j-1)*5+1)
-    hold on;
-    G=findgroups(x1); 
-    plot(splitapply(@(z) mean(z),x1,G),splitapply(@(z) mean(z),y,G),'o'); %Mean responses
-    plot(sort(x1),sort(predictedY),'Color',.5*ones(1,3));
-    text(max(x1)+10,max(predictedY),num2str(i))
-    grid on
-    subplot(2,5,(j-1)*5+2) %Bias
-    hold on
-    bar(i,params(1))
-    ylabel('Bias')
-    subplot(2,5,(j-1)*5+3) %Slope
-    hold on
-    bar(i,params(2))
-    ylabel('Noise')
-    subplot(2,5,(j-1)*5+4) %Alpha
-    hold on
-    bar(i,params(end))
-    subplot(2,5,(j-1)*5+5) %rt
-    hold on
-    G=findgroups(x);
-    scatter(splitapply(@(z) mean(z),t,G),splitapply(@(z) mean(z),acc,G))
-    xlabel('RT')
-    ylabel('Acc')
-    end
+    [pSize,driftRate(i,:),noise(i),delay(i),bias(i),t73(i),alpha(i)]=fitEZ_mine(aux);
+    s=t73(i)/(noise(i).^2).^(1/alpha(i));
+    a=accFactor(pSize,bias(i),s,alpha(i),noise(i));
+    a2=a2+a;
+    t=delay(i)+rtFactor(pSize,bias(i),s,alpha(i),noise(i));
+    t2=t2+t;
+    %Add: estimate a 'mixing' param given the true, vs. the estimated
+    %accuracies.
 end
-  mm=fitglm(X,'leftResponse~ID*pertSize+pertSize*prevSize+blockNo*pertSize+lastSpeedDiff','Distribution','binomial'); %Logisitc regression, excluding null responses
+a2=a2/Nsubs;
+t2=t2/Nsubs;
+%All in a single plot:
+figure
+subplot(2,2,1)
+hold on
+G=findgroups(abs(superSuperT.pertSize));
+superSuperT.cr=double(superSuperT.initialResponse==-sign(superSuperT.pertSize));
+superSuperT.cr(isnan(superSuperT.initialResponse))=nan;
+acc=splitapply(@(x) nanmean(x),superSuperT.cr,G);
+acc(1)=.5;
+scatter(pSize,acc,50,.4*ones(1,3),'filled') %all data
+plot(pSize,a,'k')
+plot(pSize,a2,'r')
+subplot(2,2,2)
+hold on
+rt=splitapply(@(x) nanmean(x),superSuperT.reactionTime,G);
+scatter(pSize,rt,50,.4*ones(1,3),'filled') %all data
+plot(pSize,t,'k')
+plot(pSize,t2,'r')
+subplot(2,2,3)
+hold on
+scatter(acc,rt,50,.4*ones(1,3),'filled') %all data
+plot(a,t,'k')
+plot(a2,t2,'r')
 
-  
 %% Alt EZ modeling:
 Nsubs=9;
 figure; hold on; 

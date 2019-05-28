@@ -164,7 +164,7 @@ trialData.correctResponses=trialData.initialResponse==-sign(trialData.pertSize) 
 rt=trialData.reactionTime;
 fun=@nanmean;
 %fun=@nanmedian;
-f2=figure('Units','Normalized','OuterPosition',[.5 0 .5 .5]);
+f2=figure('Units','Normalized','OuterPosition',[.5 0 .5 .3]);
 
 
 B2=findgroups(abs(trialData.pertSize)); %pertSize>0 means vR>vL
@@ -192,14 +192,14 @@ for i=1:length(s)
     MDT=Toff+(.5*a_v).*(1-exp(y))./(1+exp(y)); 
     %VRT=.5*diff.*(a./v).^2 .*(2.*y.*exp(y)-exp(2*y)+1).*Pc.^2; %Equivalent
     VRT=.5*(a_v).^2 .*(diff.*(2*Pc-1)-2*Pc.*(1-Pc));
-    subplot(2,2,1); hold on; plot(diff,MDT,'DisplayName',['s=' num2str(s(i))],'LineWidth',2); 
-    subplot(2,2,2); hold on; plot(diff,Pc,'DisplayName',['s=' num2str(s(i))],'LineWidth',2); 
-    subplot(2,4,7); hold on; plot(MDT,Pc,'LineWidth',2);
-    subplot(2,4,8); hold on; plot(VRT,Pc,'LineWidth',2);
-    subplot(2,2,3); hold on; plot(diff,VRT,'LineWidth',2);
+    subplot(1,3,2); hold on; plot(diff,MDT,'DisplayName',['s=' num2str(s(i))],'LineWidth',2); 
+    subplot(1,3,1); hold on; plot(diff,Pc,'DisplayName',['s=' num2str(s(i))],'LineWidth',2); 
+    subplot(1,3,3); hold on; plot(MDT,Pc,'LineWidth',2);
+    %subplot(2,4,8); hold on; plot(VRT,Pc,'LineWidth',2);
+    %subplot(2,2,3); hold on; plot(diff,VRT,'LineWidth',2);
 end
 diffFun=@(x) .3.*(350./x).^.75;
-subplot(2,2,1);
+subplot(1,3,2);
 xlabel('Difficulty'); 
 ylabel('Mean Reaction Time (MRT)')
 cc=pp2;
@@ -208,27 +208,27 @@ scatter(diffFun(pp2),RT,50,cc,'filled')
 errorbar(diffFun(pp2),RT,eRT,'Vertical','Color','k','LineStyle','none')
 %plot([0 5],(Toff+m(i)/2) *[1 1],'k--')
 %legend({'EZ model fit','Group data','ste','MDT(Diff=\infty)'},'Location','SouthEast'); 
-subplot(2,2,2);
+subplot(1,3,1);
 xlabel('Difficulty'); 
 ylabel('p(correct)')
 scatter(diffFun(pp2),Acc,50,cc,'filled')
 errorbar(diffFun(pp2),Acc,eAcc,'Vertical','Color','k','LineStyle','none')
 legend({'DD model fit','Group data','ste'},'Location','NorthEast'); 
-subplot(2,2,3)
-scatter(diffFun(pp2),vRT,50,cc,'filled')
-xlabel('Difficulty')
-ylabel('Variance of RT')
-subplot(2,4,7);
+%subplot(2,2,3)
+%scatter(diffFun(pp2),vRT,50,cc,'filled')
+%xlabel('Difficulty')
+%ylabel('Variance of RT')
+subplot(1,3,3);
 scatter(RT,Acc,50,cc,'filled')
 errorbar(RT,Acc,eRT,'Horizontal','Color','k','LineStyle','none')
 errorbar(RT,Acc,eAcc,'Vertical','Color','k','LineStyle','none')
 %legend({'EZ model fit','Data','ste'},'Location','SouthWest')
 xlabel('MRT')
 ylabel('p(correct)')
-subplot(2,4,8)
-scatter(vRT,Acc,50,cc,'filled')
-xlabel('VRT')
-ylabel('p(correct)')
+%subplot(2,4,8)
+%scatter(vRT,Acc,50,cc,'filled')
+%xlabel('VRT')
+%ylabel('p(correct)')
 
 %% Group fits do not work well, but individual fits may:
 %Step 1: fit a psychometric curve to each subject
