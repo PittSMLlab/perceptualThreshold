@@ -1,4 +1,4 @@
-function [pSize,driftRate,noise,delay,bias,t73,alpha]=fitEZ_mine(dataTable,method)
+function [pSize,driftRate,noise,delay,bias,t73,alpha,mix]=fitEZ_mine(dataTable,method)
 %Fits an EZ-difussion model, as in Wagenmakers et al. 2007
 %Modified from wagenmaker's approach to simultaneously fit the same noise
 %and delay across all trials, allowing different stimuli only to have different
@@ -62,28 +62,61 @@ VRT=splitapply(@nanvar,dataTable.reactionTime,G);
 %MRT=dataTable.reactionTime(~nr);
 %Acc=dataTable.response(~nr);
 %VRT=nan(size(MRT));
+mix=0;
 switch method
     case 'RT' %Fits all parameters to the best mean RT fit
         %Mean rt should satisfy = Td+.5*z/y * (1-exp(y))/(1+exp(y));
         %y=noise^2\(pSize-b)^alpha
-
-
         params=lsqnonlin(@(x) x(1)+rtFactor(pSize,x(3),x(4),x(5),x(2)) -MRT ,x0,lb,ub);
         delay=params(1);
         bias=params(3);
         alpha=params(5);
         noise=params(2);
-        scale=params(4);
-        t73=scale *(noise^2)^(1/alpha);
+        t73=params(4);
+        %t73=scale *(noise^2)^(1/alpha);
+    case 'RTalt'
+        params=lsqnonlin(@(x) x(1)+rtFactor(pSize,x(3),x(4),x(5),x(2)) -MRT ,x0,lb,ub);
+        delay=params(1);
+        bias=params(3);
+        alpha=params(5);
+        noise=params(2);
+        t73=params(4);
+        a1=accFactor(pSize,bias,t73,alpha,noise);
+        %lsq estimate:
+        mix=lsqnonlin(@(x) (1-x).*a1 + x.*(1-a1) - Acc,0,0,1);
+        %mle estimate:
+        a=accFactor(dataTable.pertSize,bias,t73,alpha,noise);
+        aa=1-2*a;
+        r=dataTable.response;
+        X=table(aa,r);
+        glm=fitglm(X,'r~aa-1','Distribution','binomial','Link','identity','Offset',a);
+        mix=glm.Coefficients.Estimate(1);
     case 'VRT' %Fits all parameters except delay to best VRT fit
         
     case 'acc' %Fits difficulty rates to accuracy, delay and noise to mean RT
         %Fit glm to get MLE psychometric, this returns 
-        params=fmincon(@(x) fitglm(),x0,[],[],[],[],lb,ub); %Get bias, t73, alpha
+        if noAlpha %This is easy
+            alpha=1;
+            if noBias
+                bias=0;
+                glm=fitglm(dataTable,'response~pertSize-1','Distribution','binomial');
+                c=glm.Coefficients.Estimate; %1/t73
+            else
+                glm=fitglm(dataTable,'response~pertSize','Distribution','binomial');
+                c=glm.Coefficients.Estimate(2); %this is 1/(t73)
+                bias=glm.Coefficients.Estimate(1)*c;
+            end
+            t73=1./c;
+        else %Do a line search over alpha first
+            error('Unimplemented')
+            params=fmincon(@(x) fitglm(),x0,[],[],[],[],lb,ub); %Get bias, t73, alpha
+        end
         %Get delay and noise:
-        
+        params=lsqnonlin(@(x) x(1)+rtFactor(pSize,bias,t73,alpha,x(2)) -MRT ,x0(1:2),lb(1:2),ub(1:2));
+        delay=params(1);
+        noise=params(2);
 end
-driftRate=nl(pSize,bias,scale,alpha);
+driftRate=nl(pSize,bias,t73,alpha);
 
 % %Diagnostics plots:
 % difficulty=dif(pSize,bias,scale,alpha,noise);

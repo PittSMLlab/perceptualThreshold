@@ -1,3 +1,3 @@
-function y=dif(x,b,s,alpha,noise)
-y=nl(x,b,s,alpha)/noise^2;
+function y=dif(x,b,t73,alpha,noise)
+y=nl(x,b,t73,alpha);
 end
