@@ -158,18 +158,18 @@ disp(['Threshold value:' num2str(bestTh)])
 % trialData.badTrial= trialData.totalClicks> 3*abs(trialData.netClicks) & abs(trialData.earlyNetClicks)>5 ; %This marks 2% of trials as bad
 % trialData.correctedAmount=trialData.pertSize-trialData.lastSpeedDiff;
 %% Modeling net click as a function of pertSize, etc
-X=trialData(~trialData.badTrial,:);
-X2=trialData(~trialData.incorrectResponse,:);
-mm=fitlm(X,'netClicks~pertSize*pertSign+blockNo:pertSign+blockNo:pertSize+correctResponse:pertSize');%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
+%X=trialData(~trialData.badTrial,:);
+%X2=trialData(~trialData.incorrectResponse,:);
+%mm=fitlm(X,'netClicks~pertSize*pertSign+blockNo:pertSign+blockNo:pertSize+correctResponse:pertSize');%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 %text(420,40,removeTags(evalc('mm.disp')),'FontSize',9,'Clipping','off')
-mm1=fitlm(X,'netClicks~incorrectResponse:pertSize+pertSize-1');%,'Distribution','normal','Link','logit','DispersionFlag',true); %Logisitc regression, excluding null responses
+%mm1=fitlm(X,'netClicks~incorrectResponse:pertSize+pertSize-1');%,'Distribution','normal','Link','logit','DispersionFlag',true); %Logisitc regression, excluding null responses
 %text(420,7,removeTags(evalc('mm1.disp')),'FontSize',9,'Clipping','off')
-hold on
-plot([-350 0 350],[350 0 350]*mm1.Coefficients.Estimate(2),'k','DisplayName','Best LM fit','LineWidth',2);
-mm=fitlm(X,'netClicks~earlyNetClicks+pertSize-1')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
+%hold on
+%plot([-350 0 350],[350 0 350]*mm1.Coefficients.Estimate(2),'k','DisplayName','Best LM fit','LineWidth',2);
+%mm=fitlm(X,'netClicks~earlyNetClicks+pertSize-1')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 %text(420,-17,removeTags(evalc('mm.disp')),'FontSize',9,'Clipping','off')
 
-mm=fitlm(X,'netClicks~earlyNetClicks-1');%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
+%mm=fitlm(X,'netClicks~earlyNetClicks-1');%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 %text(420,-40,removeTags(evalc('mm.disp')),'FontSize',9,'Clipping','off')
 
 %mm=fitlm(X,'correctedAmount~earlyNetClicks-1')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
@@ -179,7 +179,7 @@ mm=fitlm(X,'netClicks~earlyNetClicks-1');%,'Distribution','poisson','Link','iden
 %mm2=fitlm(X,'logNetClicks~correctResponse:pertSize+pertSize');%,'Distribution','normal','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 %text(380,-15,removeTags(evalc('mm2.disp')),'FontSize',9,'Clipping','off')
 
-mm3=fitlm(X,'netClicks~pertSize+correctResponse:pertSize+ID*pertSize-1');%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
+%mm3=fitlm(X,'netClicks~pertSize+correctResponse:pertSize+ID*pertSize-1');%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses
 %text(-450,-40,removeTags(evalc('mm3.disp')),'FontSize',9,'Clipping','off')
 
 %mm2=fitlm(X,'absNetClicks~absPertSize*pertSign+blockNo+correctResponse*absPertSize')%,'Distribution','poisson','Link','identity','DispersionFlag',true); %Logisitc regression, excluding null responses

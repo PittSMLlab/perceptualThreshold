@@ -28,6 +28,9 @@ trialData.ID=categorical(aux);
 
 %% Remove 250 if needed (and -250 for balancing):
 trialData=trialData(trialData.isFirstInBlock==0,:); %Test, remove the first trial in each block
+
+%% Remove null and no response trials (for accurate counting of DOF in stats)
+trialData=trialData(~trialData.noResponse,:);
 %% Get probe sizes
 B=findgroups(trialData.pertSize); %pertSize>0 means vR>vL
 pp=unique(trialData.pertSize);
@@ -153,7 +156,7 @@ for i=1:length(Nsubs)
     if ~mm{i}.Formula.HasIntercept
         y=1-1./(1+exp(b(1)*xx));
     else %Biased subject, need to fold data
-        i
+        %i
         y=.5*(1-1./(1+exp(b(1)+b(2)*xx))+1./(1+exp(b(1)+b(2)*-xx)));
     end
      plot(xx,y,'Color',.7*ones(1,3),'LineWidth',1)

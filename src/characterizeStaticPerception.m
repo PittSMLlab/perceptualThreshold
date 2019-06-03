@@ -12,7 +12,7 @@ for i=1:length(ph)
     ph(i).XAxis.FontSize=8;
     ph(i).YAxis.FontSize=8;
 end
-saveFig_(f1,'../fig/allstatic/',['acc'],0)
+%saveFig_(f1,'../fig/allstatic/',['acc'],0)
 %saveFig(f2,'../fig/allstatic/',['accuracySubjectAndBlockEffects'],0)
 %%
 %All subjects:
@@ -25,7 +25,13 @@ saveFig_(f1,'../fig/allstatic/',['acc'],0)
 
 %%
 fh=ssPlots(superSuperT);
-%saveFig(fh,'../../fig/all/',['ssAll'],0)
+ph=findobj(fh,'Type','Axes');
+set(ph,'FontSize',10);
+for i=1:length(ph)
+    ph(i).XAxis.FontSize=8;
+    ph(i).YAxis.FontSize=8;
+end
+saveFig_(fh,'../fig/allstatic/',['ssAll'],0)
 
 %% EZ modeling
 [f1,f2] = EZplots(superSuperT);

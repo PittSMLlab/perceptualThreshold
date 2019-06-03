@@ -2,7 +2,7 @@ function [f1,f2] = EZplots(superSuperT)
 
 superSuperT.isFirstInBlock=[1;diff(superSuperT.blockNo)~=0].*sign(superSuperT.pertSize);
 superSuperT=superSuperT(superSuperT.isFirstInBlock==0,:); %Test, remove the first trial in each block
-
+[cmap,unsignedMap]=probeColorMap(23);
 %% EZ modeling
 clear driftRate
 superSuperT.response=1-(superSuperT.initialResponse+1)/2;
@@ -56,16 +56,18 @@ tAll3=tAll3/Nsubs;
 
 %All in a single plot:
 f1=figure('Units','pixels','InnerPosition',[100 100 2*300 2*300]);
+set(gcf,'Colormap',unsignedMap)
 sSize=40;
 subplot(2,2,1)
 hold on
+%set(gca,'Colormap',cmap)
 G=findgroups(abs(superSuperT.pertSize));
 superSuperT.cr=double(superSuperT.initialResponse==-sign(superSuperT.pertSize));
 superSuperT.cr(isnan(superSuperT.initialResponse))=nan;
 acc=splitapply(@(x) nanmean(x),superSuperT.cr,G);
 eacc=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.cr,G);
 acc(1)=.5;
-ss=scatter(pSize,acc,sSize,.4*ones(1,3),'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
+ss=scatter(pSize,acc,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
 p1=plot(pSize,aAll2,'k','LineWidth',2,'DisplayName','Acc. fitted');
 p2=plot(pSize,aAll,'LineWidth',2,'DisplayName','RT fitted');
 %p3=plot(pSize,aAll3,'LineWidth',2,'DisplayName','RTalt fitted');
@@ -79,7 +81,7 @@ subplot(2,2,2)
 hold on
 rt=splitapply(@(x) nanmean(x),superSuperT.reactionTime,G);
 ert=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.reactionTime,G);
-ss=scatter(pSize,rt,sSize,.4*ones(1,3),'filled','MarkerEdgeColor','w'); %all data
+ss=scatter(pSize,rt,sSize,pSize,'filled','MarkerEdgeColor','w'); %all data
 plot(pSize,tAll2,'k','LineWidth',2,'DisplayName','Acc. fitted')
 plot(pSize,tAll,'LineWidth',2,'DisplayName','RT fitted')
 %plot(pSize,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
@@ -90,7 +92,7 @@ set(gca,'YLim',[0 7])
 uistack(ss,'top')
 subplot(2,2,3)
 hold on
-ss=scatter(acc,rt,sSize,.4*ones(1,3),'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
+ss=scatter(acc,rt,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
 plot(aAll2,tAll2,'k','LineWidth',2,'DisplayName','Acc. fitted')
 plot(aAll,tAll,'LineWidth',2,'DisplayName','RT fitted')
 %plot(aAll3,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
