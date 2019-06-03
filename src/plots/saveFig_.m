@@ -1,4 +1,4 @@
-function saveFig(h,dir,fileName,sizeFlag)
+function saveFig_(h,dir,fileName,sizeFlag)
 %saveFig saves figure h as .fig and .png for further reference
 fName='OpenSans';
 txt=findobj(h,'Type','Text');

@@ -6,7 +6,13 @@ run loadAllDataIntoTable.m
 addpath(genpath('../../monoLS'))
 %%
 [f1]=accPlots(superSuperT);
-%saveFig(f1,'../fig/allstatic/',['accuracyAll'],0)
+ph=findobj(f1,'Type','Axes');
+set(ph,'FontSize',10);
+for i=1:length(ph)
+    ph(i).XAxis.FontSize=8;
+    ph(i).YAxis.FontSize=8;
+end
+saveFig_(f1,'../fig/allstatic/',['acc'],0)
 %saveFig(f2,'../fig/allstatic/',['accuracySubjectAndBlockEffects'],0)
 %%
 %All subjects:
@@ -23,3 +29,11 @@ fh=ssPlots(superSuperT);
 
 %% EZ modeling
 [f1,f2] = EZplots(superSuperT);
+extendedPanelWidth(f1,.1)
+ph=findobj(f1,'Type','Axes');
+set(ph,'FontSize',10);
+for i=1:length(ph)
+    ph(i).XAxis.FontSize=8;
+    ph(i).YAxis.FontSize=8;
+end
+saveFig_(f1,'../fig/allstatic/',['EZfit'],0)

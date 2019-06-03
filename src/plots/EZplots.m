@@ -55,7 +55,8 @@ aAll3=aAll3/Nsubs;
 tAll3=tAll3/Nsubs;
 
 %All in a single plot:
-f1=figure;
+f1=figure('Units','pixels','InnerPosition',[100 100 2*300 2*300]);
+sSize=40;
 subplot(2,2,1)
 hold on
 G=findgroups(abs(superSuperT.pertSize));
@@ -64,21 +65,21 @@ superSuperT.cr(isnan(superSuperT.initialResponse))=nan;
 acc=splitapply(@(x) nanmean(x),superSuperT.cr,G);
 eacc=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.cr,G);
 acc(1)=.5;
-ss=scatter(pSize,acc,30,.4*ones(1,3),'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
+ss=scatter(pSize,acc,sSize,.4*ones(1,3),'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
 p1=plot(pSize,aAll2,'k','LineWidth',2,'DisplayName','Acc. fitted');
 p2=plot(pSize,aAll,'LineWidth',2,'DisplayName','RT fitted');
 %p3=plot(pSize,aAll3,'LineWidth',2,'DisplayName','RTalt fitted');
 errorbar(pSize,acc,eacc,'k','LineStyle','none')
 xlabel('|Probe size| (mm/s)')
 ylabel('% correct')
-legend([ss,p1,p2],'Location','SouthEast')
+legend([ss,p1,p2],'Location','SouthEast','Box','off')
 set(gca,'YLim',[.5 1.01])
 uistack(ss,'top')
 subplot(2,2,2)
 hold on
 rt=splitapply(@(x) nanmean(x),superSuperT.reactionTime,G);
 ert=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.reactionTime,G);
-ss=scatter(pSize,rt,30,.4*ones(1,3),'filled','MarkerEdgeColor','w'); %all data
+ss=scatter(pSize,rt,sSize,.4*ones(1,3),'filled','MarkerEdgeColor','w'); %all data
 plot(pSize,tAll2,'k','LineWidth',2,'DisplayName','Acc. fitted')
 plot(pSize,tAll,'LineWidth',2,'DisplayName','RT fitted')
 %plot(pSize,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
@@ -89,7 +90,7 @@ set(gca,'YLim',[0 7])
 uistack(ss,'top')
 subplot(2,2,3)
 hold on
-ss=scatter(acc,rt,30,.4*ones(1,3),'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
+ss=scatter(acc,rt,sSize,.4*ones(1,3),'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
 plot(aAll2,tAll2,'k','LineWidth',2,'DisplayName','Acc. fitted')
 plot(aAll,tAll,'LineWidth',2,'DisplayName','RT fitted')
 %plot(aAll3,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
@@ -105,7 +106,7 @@ hold on
 plot(pSize,mean(difficulty2,1),'k','LineWidth',2,'DisplayName','Acc fitted')
 plot(pSize,mean(difficulty,1),'LineWidth',2,'DisplayName','Acc fitted')
 xlabel('|Probe size| (mm/s)')
-ylabel('Difficulty')
+ylabel('1/difficulty')
 %% Alt EZ modeling:
 Nsubs=9;
 f2=figure('Name','Analysis of choice-fitted indiv. models'); hold on; 

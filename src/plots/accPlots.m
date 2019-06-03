@@ -32,17 +32,19 @@ trialData=trialData(trialData.isFirstInBlock==0,:); %Test, remove the first tria
 B=findgroups(trialData.pertSize); %pertSize>0 means vR>vL
 pp=unique(trialData.pertSize);
 %% First figure: global stats
-fh=figure('Units','Normalized','OuterPosition',[.4 .65 .6 .35]);
-Q=6;
-
+fh=figure('Units','pixels','InnerPosition',[100 100 3*300 1*300]);
+%set(fh,'PaperUnits','inches','PaperPosition',[0 0 6 2]); %To print at 300dpi
+sSize=40;
+[cmap,unsignedMap]=probeColorMap(23);
 %% First plot: choices as function of probe size
 subplot(1,3,1)
+hold on
+set(gca,'Colormap',cmap);
 S=splitapply(@(x) sum(x==-1)/sum(~isnan(x)),trialData.initialResponse,B); %Not counting NR responses
 E=splitapply(@(x) nanstd(x==-1)/sqrt(sum(~isnan(x))),trialData.initialResponse,B); %Not counting NR responses
-ss=scatter(pp,S,30,zeros(1,3),'filled','MarkerEdgeColor','w');
+ss=scatter(pp,S,sSize,pp,'filled','MarkerEdgeColor','w');
 grid on
 ylabel('% ''<'' (left is slow) responses') 
-xlabel('vL>vR     probe (mm/s)      vL<vR')
 axis([-360 360 0 1])
 X=trialData;
 %Add fits:
@@ -95,11 +97,12 @@ uistack(ll(1:end-1),'bottom')
 uistack(ss,'top')
 title(['Choice vs. probe size'])
 ylabel('% ''<'' (left is slow) responses') 
-xlabel('vL>vR         probe size (mm/s)          vL<vR')
+xlabel('vL>vR       probe (mm/s)       vL<vR')
 set(gca,'XLim',[-350 350])
 
 %% Second plot: same data, but folded to get accuracy estimates and thresholds
 subplot(1,3,2)
+set(gca,'Colormap',unsignedMap);
 hold on
 trialData.correctResponses=double(trialData.correctResponses);
 trialData.correctResponses(isnan(trialData.initialResponse))=nan;
@@ -107,7 +110,7 @@ B2=findgroups(abs(trialData.pertSize));
 S2=splitapply(@(x) nansum(x)/sum(~isnan(x)),trialData.correctResponses,B2); %Not counting NR responses
 S2(S2==0)=NaN;
 ap=sort(unique(abs(pp)));
-ss=scatter(ap,S2,30,zeros(1,3),'filled','MarkerEdgeColor','w');
+ss=scatter(ap,S2,sSize,ap,'filled','MarkerEdgeColor','w');
 E2=splitapply(@(x) nanstd(x==1)/sqrt(sum(~isnan(x))),trialData.correctResponses,B2); %Not counting NR responses
 grid on
 errorbar(ap,S2,E2,'k','LineStyle','none')
@@ -166,7 +169,8 @@ disp(['Group=' num2str(thm) ', mean=' num2str(mean(th)) ', std=' num2str(std(th)
 %% Same, but with monotonic fits instead of psychom
 subplot(1,3,3)
 hold on
-ss=scatter(sort(unique(abs(pp))),S2,30,zeros(1,3),'filled','MarkerEdgeColor','w');
+set(gca,'Colormap',unsignedMap);
+ss=scatter(sort(unique(abs(pp))),S2,sSize,ap,'filled','MarkerEdgeColor','w');
 grid on
 ylabel('% correct') 
 xlabel(' |probe size| (mm/s)')
@@ -201,3 +205,5 @@ uistack(ll,'bottom')
 uistack(ss,'top')
 disp('-------------Soft threshold stats (mono fit):------------')
 disp(['Group=' num2str(thm) ', mean=' num2str(mean(th)) ', std=' num2str(std(th)) ', range=[' num2str(min(th)) ',' num2str(max(th)) ']']);
+%% Extend panels 10% in width
+extendedPanelWidth(fh,.1)
