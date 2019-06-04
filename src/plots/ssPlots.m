@@ -18,15 +18,15 @@ trialData.pertSign=sign(trialData.pertSize);
 trialData.blockNo=trialData.blockNo-1; %To make the first block have 0 contribution in linear model
 %% %Remove first trial in each block
 trialData=trialData(trialData.isFirstInBlock==0,:); %Test, remove the first trial in each block
-%% steady-state as function of perturbation size
+%% steady-state as function of perturbation size and correct/incorrect
 fh=figure('Units','pixels','InnerPosition',[100 100 3*300 1*300]);
 for i=1:2
     switch i
         case 1
-            X=trialData(trialData.correctResponse==1 | trialData.pertSize==0,:);
+            X=trialData(trialData.correctResponse==1,:);
             ttl='Correct trials';
         case 2
-            X=trialData(trialData.incorrectResponse==1,:);
+            X=trialData(trialData.incorrectResponse==1  | trialData.pertSize==0,:);
             ttl='Incorrect trials';
     end
     
@@ -38,17 +38,22 @@ for i=1:2
     S4=splitapply(fun,Ya,Ba);
     M4=splitapply(@(x) nanmedian(x), Ya,Ba);
     pp=splitapply(fun,X.pertSize,Ba);
-    E4=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),Ya,Ba);
+    %E4=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),Ya,Ba);
+    E4=splitapply(@(x) nanstd(x),Ya,Ba);
     %s1=scatter(trialData.pertSize,trialData.lastSpeedDiff,5,.5*ones(1,3),'filled');
     hold on
     s2=scatter(pp,M4,50,pp,'filled','MarkerEdgeColor','w');
     colormap(cmap)
-    ptc=errorbar(pp,S4,E4,'k','LineStyle','none');
+    ptc=errorbar(pp,S4,E4,'k','LineStyle','none','LineWidth',1);
+    E4=splitapply(@(x) prctile(x,75),Ya,Ba)-M4;
+    E5=M4-splitapply(@(x) prctile(x,25),Ya,Ba);
+    %ptc2=errorbar(pp,M4,E4,E5,'k','LineStyle','none');
     uistack(ptc,'bottom')
+    %    uistack(ptc2,'bottom')
     grid on
     ylabel('Reported PSE (mm/s)') 
     xlabel('probe size (mm/s)')
-    axis([-360 360 -125*i 125*i])
+    axis([-360 360 -250*1 250*1])
     hold on
 
     y=splitapply(@nanmean,Ya,Ba);
@@ -56,7 +61,7 @@ for i=1:2
     %ptc=patch([pp' fliplr(pp')],[y'+y2' fliplr(y'-y2')],.5*ones(1,3),'FaceAlpha',.3,'EdgeColor','none');
     %uistack(ptc,'bottom')
     if i==1
-    legend([s2 ptc],{'median','mean \pm ste'},'Location','NorthWest')
+    legend([s2 ptc],{'median','mean \pm std','25-75 percentile'},'Location','SouthEast','Box','off')
     clear pval
     %For correct responses only: test for differences from 0:
     for j=1:length(pp1)
@@ -70,34 +75,94 @@ for i=1:2
     title(ttl)
 end
 
-% Test that distribution is bimodal:
-mm=fitlm(trialData,'lastSpeedDiff~pertSize+correctResponse:pertSize-1') %Allowing for different correct and incorrect responses
-
-%Compare two models for correct responses: linear slope (e.g. subjects correct x%), and fixed
-%threshold (e.g. subjects correct until they fall within a certain band)
+%% Analysis of CORRECT TRIALS ONLY
+disp('---------------Correct trials only!---------------------')
+%Test for foreign effects:
 X=trialData(trialData.correctResponse==1,:); %Only correct responses for analysis
 %Slope model:
 frml='lastSpeedDiff~pertSize+prevSize+pertSize:blockNo+pertSize:pertSign-1';
-mm=fitlm(X,frml);
+mm=fitlm(X,frml)
 mm=mm.step('Upper',frml,'Criterion','SSE','PEnter',0,'PRemove',0.05,'Nsteps',Inf)
 
+%Dead-zone model:
+bestRMSE=Inf;
+for th=0:5:300 %Line search over possible thresholds
+    X.expl= sign(X.pertSize).*max(abs(X.pertSize)-th,0);
+    mm0=fitlm(X,'lastSpeedDiff~expl-1');
+    RMSE=mm0.RMSE;
+    if RMSE<bestRMSE
+        bestRMSE=RMSE;
+        bestTh=th;
+    end
+end
+disp(['Deadzone model RMSE: ' num2str(bestRMSE)])
+disp(['Deadzone threshold: ' num2str(bestTh)])
+disp(['Deadzone slope: ' num2str(mm0.Coefficients.Estimate)])
+Nsamp=mm.DFE+1; %Cancels out
+Ndof=mm.DFE;
+F=(Nsamp*(RMSE-bestRMSE).^2)/1 / ((Nsamp* bestRMSE.^2)/(Ndof-1));
+disp(['F-stat: ' num2str(F) ', p=' num2str(1-fcdf(F,1,Ndof-1,'upper'))]) %Deadzone model is nested
+
+%% Analysis of all trials:
+disp('----------------------All trials-----------------------')
+X=trialData; %Both correct and incorrect trials!
+% Test that distribution is bimodal:
+mm=fitlm(X,'lastSpeedDiff~pertSize+correctResponse:pertSize-1') %Allowing for different correct and incorrect responses
+%mm.anova
+
+%Compare two models for correct responses: linear slope (e.g. subjects correct x%), and fixed
+%threshold (e.g. subjects correct until they fall within a certain band)
+mm=fitlm(X,'lastSpeedDiff~pertSize-1');
 disp(['Linear model RMSE:' num2str(mm.RMSE)])
 disp(['Linear model slope:' num2str(mm.Coefficients.Estimate)])
 L1=nansum(abs(mm.Residuals.Raw));
 %Threshold model:
 bestRMSE=Inf;
-for th=1:75 %Line search over possible thresholds
+for th=0:5:200 %Line search over possible thresholds
     X.expl= sign(X.pertSize).*min(abs(X.pertSize),th);
-    RMSE=sqrt(nanmean((X.lastSpeedDiff-X.expl).^2));
+    %RMSE=sqrt(nanmean((X.lastSpeedDiff-X.expl).^2)); %Fixing slope to 1: this does not result in RMSE better than the linear model
+    mm0=fitlm(X,'lastSpeedDiff~expl-1'); %Slopey threshold: allows for some correction even of below-threshold probes
+    RMSE=mm0.RMSE;
     if RMSE<bestRMSE
         bestRMSE=RMSE;
         bestTh=th;
-        L1=nansum(abs(X.lastSpeedDiff-X.expl));
     end
 end
 disp(['Threshold model RMSE:' num2str(bestRMSE)])
 disp(['Threshold value:' num2str(bestTh)])
+disp(['Slope: ' num2str(mm0.Coefficients.Estimate)])
+Nsamp=mm.DFE+1; %Cancels out
+Ndof=mm.DFE;
+F=(Nsamp*(RMSE-bestRMSE).^2)/1 / ((Nsamp* bestRMSE.^2)/(Ndof-1));
+disp(['F-stat: ' num2str(F) ', p=' num2str(1-fcdf(F,1,Ndof-1,'upper'))]) %Deadzone model is nested
 
+%% Incorrect trials only:
+disp('---------------INCorrect trials only!---------------------')
+%Test for foreign effects:
+X=trialData(trialData.correctResponse~=1,:); %Only correct responses for analysis
+%Slope model:
+frml='correction~pertSize-1';
+X.correction=X.pertSize-X.lastSpeedDiff;
+mm=fitlm(X,frml) %Offset added so stats will reveal difference to no-correction line
+
+nc=X.correction(X.pertSize==0);
+m=mean(nc);
+s=std(nc);
+disp(['Null trial reported PSE: ' num2str(m) ' \pm ' num2str(s) ' (mean \pm std)'])
+%figure; hold on;
+%mm.plotPartialDependence('pertSize')
+%scatter(X.pertSize,X.correction,20,'k','filled')
+%%
+%figure; %Plotting all data by probe size
+%hold on
+%pp=unique(trialData.pertSize);
+%for i=1:length(pp)
+%y=trialData.lastSpeedDiff(trialData.pertSize==pp(i) & trialData.correctResponse==1);
+%scatter(pp(i)*ones(size(y)),y,10,'k','filled')
+%
+%y=trialData.lastSpeedDiff(trialData.pertSize==pp(i) & trialData.correctResponse~=1);
+%scatter(pp(i)*ones(size(y)),y,10,.5*ones(1,3),'filled')
+%end
 %% Figure: clicking rates
 % figure
 % subplot(2,Q,3:4)

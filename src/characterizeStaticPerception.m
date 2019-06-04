@@ -31,7 +31,7 @@ for i=1:length(ph)
     ph(i).XAxis.FontSize=8;
     ph(i).YAxis.FontSize=8;
 end
-saveFig_(fh,'../fig/allstatic/',['ssAll'],0)
+%saveFig_(fh,'../fig/allstatic/',['ssAll'],0)
 
 %% EZ modeling
 [f1,f2] = EZplots(superSuperT);
