@@ -109,9 +109,9 @@ end
 %% Plot adaptation
 %func=@(x) nanmedian(x);
 func=@(x) nanmean(x);
-allTA.leftResponse=allTA.initialResponse==-1+.5*isnan(allTA.initialResponse); %No response is coded as 50/50
-allTP.leftResponse=allTP.initialResponse==-1+.5*isnan(allTP.initialResponse); %No response is coded as 50/50
-allT.leftResponse=allT.initialResponse==-1+.5*isnan(allT.initialResponse);
+allTA.leftResponse=(allTA.initialResponse==-1) + .5*isnan(allTA.initialResponse); %No response is coded as 50/50
+allTP.leftResponse=(allTP.initialResponse==-1) + .5*isnan(allTP.initialResponse); %No response is coded as 50/50
+allT.leftResponse=(allT.initialResponse==-1)+.5*isnan(allT.initialResponse);
 
 fh=figure('Units','Normalized','OuterPosition',[.5 .2 .5 .8]);
 
@@ -140,7 +140,7 @@ allT.projectedPSE2=allT.pertSize+invpsycho(u,(allT.lastSpeedDiff-allT.pertSize)/
 %Get stride coordinates:
 load dynamicProfiles.mat %Storage for dynamic profiles: need to change to csv
 firstResponseStrideA=find(isnan(vL(2:end)) & ~isnan(vL(1:end-1)));
-
+firstResponseStrideP=find(isnan(vLp(2:end)) & ~isnan(vLp(1:end-1)))+length(vL);
 
 allTA.netClicks=allTA.Lclicks-allTA.Rclicks;
 allT.netClicks=allT.Lclicks-allT.Rclicks;
@@ -250,7 +250,7 @@ for k=1:mK
     %scatter(-2*ones(sum(allT.pertSize==200),1),vB(allT.pertSize==200),50,[.7,.2,0])
 end
 
-saveFig(fh,'../fig/alldyn/','timecourse',0)
+%saveFig(fh,'../fig/alldyn/','timecourse',0)
 %% Find temporal decay during post-adapt
 figure; 
 vars={'projectedPSE','lastSpeedDiff','projectedPSE2'};

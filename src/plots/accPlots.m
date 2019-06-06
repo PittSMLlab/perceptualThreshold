@@ -1,4 +1,4 @@
-function [fh]=accPlots(trialData)
+function [fh,f2]=accPlots(trialData)
 
 %% Define quantities of interest
 %nullTrials=trialData.pertSize==0;
@@ -47,7 +47,7 @@ S=splitapply(@(x) sum(x==-1)/sum(~isnan(x)),trialData.initialResponse,B); %Not c
 E=splitapply(@(x) nanstd(x==-1)/sqrt(sum(~isnan(x))),trialData.initialResponse,B); %Not counting NR responses
 ss=scatter(pp,S,sSize,pp,'filled','MarkerEdgeColor','w');
 grid on
-ylabel('% ''<'' (left is slow) responses') 
+ylabel('proportion of left choices') 
 axis([-360 360 0 1])
 X=trialData;
 %Add fits:
@@ -99,8 +99,8 @@ set(ll(end),'Color','k','LineWidth',2);
 uistack(ll(1:end-1),'bottom')
 uistack(ss,'top')
 title(['Choice vs. probe size'])
-ylabel('% ''<'' (left is slow) responses') 
-xlabel('vL>vR       probe (mm/s)       vL<vR')
+ylabel('proportion of left choices') 
+xlabel('vL>vR         probe (mm/s)         vL<vR')
 set(gca,'XLim',[-350 350])
 
 %% Second plot: same data, but folded to get accuracy estimates and thresholds
@@ -117,7 +117,7 @@ ss=scatter(ap,S2,sSize,ap,'filled','MarkerEdgeColor','w');
 E2=splitapply(@(x) nanstd(x==1)/sqrt(sum(~isnan(x))),trialData.correctResponses,B2); %Not counting NR responses
 grid on
 errorbar(ap,S2,E2,'k','LineStyle','none')
-ylabel('% correct') 
+ylabel('accuracy') 
 xlabel(' |probe size| (mm/s)')
 axis([0 360 .5 1])
 
@@ -175,7 +175,7 @@ hold on
 set(gca,'Colormap',unsignedMap);
 ss=scatter(sort(unique(abs(pp))),S2,sSize,ap,'filled','MarkerEdgeColor','w');
 grid on
-ylabel('% correct') 
+ylabel('accuracy') 
 xlabel(' |probe size| (mm/s)')
 axis([0 360 .5 1])
 errorbar(ap,S2,E2,'k','LineStyle','none')
@@ -210,3 +210,79 @@ disp('-------------Soft threshold stats (mono fit):------------')
 disp(['Group=' num2str(thm) ', mean=' num2str(mean(th)) ', std=' num2str(std(th)) ', range=[' num2str(min(th)) ',' num2str(max(th)) ']']);
 %% Extend panels 10% in width
 extendedPanelWidth(fh,.1)
+
+%%
+k=1.0986;
+X=trialData; %Excludes no response trials already
+X.acc=X.correctResponses+.5*trialData.nullTrials;
+biases=cellfun(@(x) x.Coefficients.Estimate(1),mm);
+slopes=cellfun(@(x) x.Coefficients.Estimate(2),mm);
+CI=cell2mat(cellfun(@(x) x.coefCI,mm,'UniformOutput',false));
+biasCI=reshape(CI(1,:),2,9);
+slopeCI=reshape(CI(2,:),2,9);
+f2=figure('Units','pixels','InnerPosition',[100 100 3*300 1*300]);
+subplot(1,3,2) %Bias
+hold on
+%alt: plot % left choices corresponding to bias
+%biases=1-1./(1+exp(biases))-.5;
+%biasCI=1-1./(1+exp(biasCI))-.5;
+%gb=1-1./(1+exp(mm0.Coefficients.Estimate(1)))-.5;
+%gCI=1-1./(1+exp(mm0.coefCI))-.5;
+%ylabel('excess left choice at \Delta V=0')
+%Alt: PSE
+biases=-biases./slopes; %PSE
+biasCI=-biasCI./slopes; %First order approx to uncertainty: presume that slopes are fixed
+gb=-mm0.Coefficients.Estimate(1)/mm0.Coefficients.Estimate(2);
+gCI=-mm0.coefCI./mm0.Coefficients.Estimate(2);
+ylabel('PSE [-\beta_0/\beta_1] (mm/s)')
+
+%Do plot:
+bb=bar(biases,'FaceColor',.6*ones(1,3),'EdgeColor','none');
+bar(11,gb,'FaceColor',.2*ones(1,3),'EdgeColor','none');
+errorbar(11,gb,gb-gCI(1,1),gCI(1,2)-gb,'k','LineStyle','none','LineWidth',1);
+ee=errorbar(1:9,biases,biases-biasCI(2,:),biasCI(1,:)-biases,'k','LineStyle','none','LineWidth',1);
+
+title('bias')
+xlabel('subject')
+set(gca,'XTick',[1:9,11],'XTickLabel',{'1','2','3','4','5','6','7','8','9','Group'})
+
+subplot(1,3,3) %Slope
+hold on
+%Alt: plot 1.1/beta_1
+slopes=k./slopes;
+slopeCI=k./slopeCI;
+bb=bar(slopes,'FaceColor',.6*ones(1,3),'EdgeColor','none');
+ee=errorbar(1:9,slopes,slopes-slopeCI(2,:),slopeCI(1,:)-slopes,'k','LineStyle','none','LineWidth',1);
+gb=k/mm0.Coefficients.Estimate(2);
+bar(11,gb,'FaceColor',.2*ones(1,3),'EdgeColor','none');
+gCI=k./mm0.coefCI;
+errorbar(11,gb,gb-gCI(2,2),gCI(2,1)-gb,'k','LineStyle','none','LineWidth',1);
+title('probe size effect')
+ylabel('\Delta V for 75% acc. [\approx 1.1/\beta_1] (mm/s)')
+set(gca,'XTick',[1:9,11],'XTickLabel',{'1','2','3','4','5','6','7','8','9','Group'})
+xlabel('subject')
+
+subplot(1,3,1) %Avg. accuracy vs. avg. RT
+hold on
+G=findgroups(X.subID);
+acc=splitapply(@nanmean,X.acc,G);
+eacc=splitapply(@(x) nanstd(x)/sqrt(numel(x)),X.acc,G);
+RT=splitapply(@nanmean,X.reactionTime,G);
+eRT=splitapply(@(x) nanstd(x)/sqrt(numel(x)),X.reactionTime,G);
+errorbar(RT,acc,eacc,'k','LineStyle','none')
+ee=errorbar(RT,acc,eRT,'k','Horizontal','LineStyle','none','DisplayName','ste');
+ss=scatter(RT,acc,sSize,.5*ones(1,3),'filled','MarkerEdgeColor','w','DisplayName','Individual subject data')
+rta=nanmean(X.reactionTime);
+acca=nanmean(X.acc);
+scatter(rta,acca,sSize,.2*ones(1,3),'filled','MarkerEdgeColor','w')
+eRTa=nanstd(X.reactionTime)/sqrt(sum(~isnan(X.reactionTime)));
+eacca=nanstd(X.acc)/sqrt(sum(~isnan(X.reactionTime)));
+errorbar(rta,acca,eRTa,'k','Horizontal','LineStyle','none','DisplayName','ste');
+errorbar(rta,acca,eacca,'k','LineStyle','none')
+text(RT+.05,acc-.02,num2str([1:9]'),'Fontsize',7,'FontName','OpenSans')
+text(rta-.2,acca+.025,'G','Fontsize',7,'FontName','OpenSans')
+ylabel('accuracy')
+xlabel('mean RT (s)')
+title('indiv. accuracy vs. RT')
+
+extendedPanelWidth(f2,.1)
