@@ -67,12 +67,12 @@ superSuperT.cr(isnan(superSuperT.initialResponse))=nan;
 acc=splitapply(@(x) nanmean(x),superSuperT.cr,G);
 eacc=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.cr,G);
 acc(1)=.5;
-ss=scatter(pSize,acc,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
-p1=plot(pSize,aAll2,'k','LineWidth',2,'DisplayName','Acc. fitted');
+ss=scatter(pSize,acc,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','group data'); %all data
+p1=plot(pSize,aAll2,'k','LineWidth',2,'DisplayName','acc. fitted');
 p2=plot(pSize,aAll,'LineWidth',2,'DisplayName','RT fitted');
 %p3=plot(pSize,aAll3,'LineWidth',2,'DisplayName','RTalt fitted');
 errorbar(pSize,acc,eacc,'k','LineStyle','none')
-xlabel('|Probe size| (mm/s)')
+xlabel('|probe size| (mm/s)')
 ylabel('% correct')
 legend([ss,p1,p2],'Location','SouthEast','Box','off')
 set(gca,'YLim',[.5 1.01])
@@ -82,24 +82,24 @@ hold on
 rt=splitapply(@(x) nanmean(x),superSuperT.reactionTime,G);
 ert=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.reactionTime,G);
 ss=scatter(pSize,rt,sSize,pSize,'filled','MarkerEdgeColor','w'); %all data
-plot(pSize,tAll2,'k','LineWidth',2,'DisplayName','Acc. fitted')
+plot(pSize,tAll2,'k','LineWidth',2,'DisplayName','acc. fitted')
 plot(pSize,tAll,'LineWidth',2,'DisplayName','RT fitted')
 %plot(pSize,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
 errorbar(pSize,rt,ert,'k','LineStyle','none')
-xlabel('|Probe size| (mm/s)')
-ylabel('Mean RT (s)')
+xlabel('|probe size| (mm/s)')
+ylabel('mean RT (s)')
 set(gca,'YLim',[0 7])
 uistack(ss,'top')
 subplot(2,2,3)
 hold on
-ss=scatter(acc,rt,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','Group data'); %all data
-plot(aAll2,tAll2,'k','LineWidth',2,'DisplayName','Acc. fitted')
+ss=scatter(acc,rt,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','group data'); %all data
+plot(aAll2,tAll2,'k','LineWidth',2,'DisplayName','acc. fitted')
 plot(aAll,tAll,'LineWidth',2,'DisplayName','RT fitted')
 %plot(aAll3,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
 errorbar(acc,rt,ert,'k','LineStyle','none')
 errorbar(acc,rt,eacc,'Horizontal','k','LineStyle','none')
 xlabel('% correct')
-ylabel('Mean RT (s)')
+ylabel('mean RT (s)')
 %axis tight
 uistack(ss,'top')
 set(gca,'XLim',[.5 1.01],'YLim',[0 7])
@@ -107,8 +107,8 @@ subplot(2,2,4)
 hold on
 plot(pSize,mean(difficulty2,1),'k','LineWidth',2,'DisplayName','Acc fitted')
 plot(pSize,mean(difficulty,1),'LineWidth',2,'DisplayName','Acc fitted')
-xlabel('|Probe size| (mm/s)')
-ylabel('1/difficulty')
+xlabel('|probe size| (mm/s)')
+ylabel('difficulty^{-1}')
 %% Alt EZ modeling:
 Nsubs=9;
 f2=figure('Name','Analysis of choice-fitted indiv. models'); hold on; 
@@ -156,9 +156,9 @@ for i=1:Nsubs
         %scatter(x,y,'filled');
         set(gca,'ColorOrderIndex',i)
         mm.plotPartialDependence(xvar)
-                xlabel('Probe size (mm/s)')
+                xlabel('probe size (mm/s)')
         ylabel('% left choice')
-        title('Choice vs. probe size')
+        title('choice vs. probe size')
         
         for k=1:size(ci,1)
             subplot(2,5,(j-1)*5+k+1)
@@ -167,13 +167,13 @@ for i=1:Nsubs
             bar(i,c)
             errorbar(i,c,c-ci(k,1),ci(k,2)-c,'k')
             if k==1
-                title('Bias')
+                title('bias')
             else 
-                title('Slope')
+                title('slope')
             end
-            xlabel('Subject ID')
+            xlabel('subject ID')
             set(gca,'XTick',1:9)
-            ylabel('Parameter value')
+            ylabel('parameter value')
         end
 
         
@@ -190,7 +190,7 @@ for i=1:Nsubs
          pp=polyfit(auxT(~isnan(auxT)),y(idx(~isnan(auxT))),1);
          rt=pp(1)*auxT+pp(2);
         plot(rt,xx) %EZ DDM prediction
-        xlabel('Expected RT (s)')
+        xlabel('expected RT (s)')
         ylabel('% left choice')
         
         subplot(2,5,(j-1)*5+4) %Probe size vs. RT
@@ -202,8 +202,8 @@ for i=1:Nsubs
          %scatter(xx,y,'filled')
          set(gca,'ColorOrderIndex',i)
         plot(xx,rt) %EZ DDM prediction
-        ylabel('Expected RT (s)')
-        xlabel('Probe size (mm/s)')
+        ylabel('expected RT (s)')
+        xlabel('probe size (mm/s)')
     end
 end
 end

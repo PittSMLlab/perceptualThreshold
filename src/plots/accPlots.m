@@ -26,8 +26,8 @@ aux=trialData.subID;
 %aux(aux==4)=1;
 trialData.ID=categorical(aux);
 
-%% Remove 250 if needed (and -250 for balancing):
-trialData=trialData(trialData.isFirstInBlock==0,:); %Test, remove the first trial in each block
+%% Remove first trial in each block
+trialData=trialData(trialData.isFirstInBlock==0,:); %Test, remove the 
 
 %% Remove null and no response trials (for accurate counting of DOF in stats)
 trialData=trialData(~trialData.noResponse,:);
@@ -98,9 +98,9 @@ set(ll(1:end-1),'Color',.7*ones(1,3));
 set(ll(end),'Color','k','LineWidth',2);
 uistack(ll(1:end-1),'bottom')
 uistack(ss,'top')
-title(['Choice vs. probe size'])
+title(['logistic model of choice'])
 ylabel('proportion of left choices') 
-xlabel('vL>vR         probe (mm/s)         vL<vR')
+xlabel('vL>vR   probe size (mm/s)   vL<vR')
 set(gca,'XLim',[-350 350])
 
 %% Second plot: same data, but folded to get accuracy estimates and thresholds
@@ -124,15 +124,20 @@ axis([0 360 .5 1])
 %Run binomial tests and BH on accuracy results:
 clear pval h
 for i=2:length(S2)
-    Ntrials=sum(~isnan(trialData.initialResponse(abs(trialData.pertSize)==ap(i))));
-    correctTrials=Ntrials*S2(i);
-    pval(i-1)=binocdf(correctTrials,Ntrials,.5,'upper');
+    Ntrials(i)=sum(~isnan(trialData.initialResponse(abs(trialData.pertSize)==ap(i))));
+    correctTrials=Ntrials(i)*S2(i);
+    pval(i-1)=binocdf(correctTrials-1,Ntrials(i),.5,'upper'); %Subtracting one from the count 
+    %is needed because Matlab's ''upper'' tail is actually the complement to the lower tail, 
+    %so it excludes the current value.
 end
-h=BenjaminiHochberg(pval, .05, true); %Two-stage BKY procedure    
 disp('Significance testing on accuracy:')
+for i=1:length(pval)
+    disp(['\Delta v=' num2str(ap(i+1),3) ', p=' num2str(pval(i),4) ', hits=' num2str(Ntrials(i+1)*S2(i+1),2) '/' num2str(Ntrials(i+1),2)])
+end
+h=BenjaminiHochberg(pval, .05, true); %Two-stage BKY procedure, this makes little sense given that our procedure is sequential
 if all(h)
     [mp,mpi]=max(pval);
-    disp(['All test were significant. Largest p=' num2str(mp) ' for probe size=' num2str(ap(mpi+1)) 'mm/s'])
+    disp(['All test were significant with BKY. Largest p=' num2str(mp) ' for probe size=' num2str(ap(mpi+1)) 'mm/s'])
 else
     disp('Some non-sig tests!')
     disp(num2str(ap([0 h])))
@@ -163,7 +168,7 @@ for i=1:length(Nsubs)
      th(i)=find(y>.75,1,'first');
 end
 %legend({'Data','Group fit','Individuals fits'},'Location','SouthEast')
-title('Accuracy and psychometric fits')
+title('accuracy and logistic fits')
 ll=findobj(gca,'Type','Line','LineWidth',1');
 uistack(ll,'bottom')
 uistack(ss,'top')
@@ -201,8 +206,8 @@ for i=1:length(Nsubs)
      th2(i)=(find(y>.75,1,'first'));
 end
 th=th2;
-legend([ss p1 p2],{'Data','Group fit','Individuals fits'},'Location','SouthEast','box','off')
-title('Accuracy and monotonic fits')
+legend([ss p1 p2],{'data','group fit','individuals fits'},'Location','SouthEast','box','off')
+title('accuracy and non-param. fits')
 ll=findobj(gca,'Type','Line','LineWidth',1');
 uistack(ll,'bottom')
 uistack(ss,'top')
@@ -258,7 +263,7 @@ bar(11,gb,'FaceColor',.2*ones(1,3),'EdgeColor','none');
 gCI=k./mm0.coefCI;
 errorbar(11,gb,gb-gCI(2,2),gCI(2,1)-gb,'k','LineStyle','none','LineWidth',1);
 title('probe size effect')
-ylabel('\Delta V for 75% acc. [\approx 1.1/\beta_1] (mm/s)')
+ylabel(' soft JND [1.1\beta_1^{-1}] (mm/s)')
 set(gca,'XTick',[1:9,11],'XTickLabel',{'1','2','3','4','5','6','7','8','9','Group'})
 xlabel('subject')
 

@@ -24,10 +24,10 @@ for i=1:2
     switch i
         case 1
             X=trialData(trialData.correctResponse==1,:);
-            ttl='Correct trials';
+            ttl='correct trials';
         case 2
             X=trialData(trialData.incorrectResponse==1  | trialData.pertSize==0,:);
-            ttl='Incorrect trials';
+            ttl='incorrect trials';
     end
     
     subplot(1,2,i)
