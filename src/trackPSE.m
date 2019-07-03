@@ -4,6 +4,7 @@
  addpath(genpath('../'))
 dataDir='../data/';
 subList=dir([dataDir 'AB*']);
+addpath(genpath('../../matlab-linsys/'))
 %% Load fast & slow baseline trials
 sL=1:10;
 %sL=[1:7,9,10]; %Excluding subj 8
@@ -86,6 +87,7 @@ startTime=allData.date*1e5+allData.startTime;
 [~,idx]=sort(startTime,'ascend');
 allData=allData(idx,:);
 obs=discretizeObs(allData.initialResponse==1,2,[0,1]);
+obs2=discretizeObs(allData.lastSpeedDiff-allData.pertSize,50,[-300,300]);
 obsTimes=repmat(obsTimes,10,1);
 
 N=length(input);
@@ -95,11 +97,13 @@ range=[-500:10:500];
 p=1./(1+exp((range+bias)/sigma));
 pObsGivenState=[p;1-p];
 O=@(u) [0;1]+[1;-1].*1./(1+exp((range+bias-u)/sigma));
+O2=[]; %Obs matrix for adjustment task: linear correction with saturation, and variability.
 %that in baseline PSE=0
 %We'll assume some arbitrary transition matrices p(x_{k+1}|x_{k},u_{k}), which
-s=20;
-T=exp((range'-range)/(2*s^2));
+s=4;
+T=exp(-(range'-range).^2./(2*s^2));
 pStateInitial=ones(size(range'))/numel(range);
+N=length(input);
 %Run a hidden-markov model inference to get p(x_k| obs)
 %Inference:
 [pPredicted, pUpdated, pSmoothed] = HMMnonStationaryInferenceAlt(obs,obsTimes,input,O,T,pStateInitial);
@@ -109,6 +113,12 @@ pStateInitial=ones(size(range'))/numel(range);
 %Viz:
 [fh] = vizHMMInference(pSmoothed,T,O(0),obs,obsTimes,range,[0 1],1:N);
 
+%Add adapt/post separation\
+ph=findobj(fh,'Type','Axes');
+axes(ph(2))
+hold on
+plot(888*[1 1],500*[1 -1],'k')
+plot(1793*[1 1],500*[1 -1],'k')
 %% The real deal:
 %Get table with responses, generate observation vectors
 
