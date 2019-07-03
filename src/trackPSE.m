@@ -86,7 +86,7 @@ allData=allData(idx,:);
 baseData=[allT;allT1];
 baseData.leftResponse=baseData.initialResponse==-1;
 trueResponses=baseData(~isnan(baseData.reactionTime),:);
-psychom=fitglm(trueResponses,'leftResponse~pertSize','Distribution','binomial');
+psychom=fitglm(trueResponses,'leftResponse~pertSize','Distribution','binomial')
 sigma=1/psychom.Coefficients.Estimate(2) %Empirically estimated sigma for accuracy response
 bias=-psychom.Coefficients.Estimate(1)/psychom.Coefficients.Estimate(2)
 baseData=[allT];
@@ -106,7 +106,7 @@ input=[v];
 obsTimes=find(isnan(input(2:end)) & ~isnan(input(1:end-1)));
 range=[-500:10:500];
 %range=[-300:6:300];
-dataUsed=1;
+dataUsed=2;
 switch dataUsed
     case 1
         obs=discretizeObs(allData.initialResponse==1,2,[0,1]);
