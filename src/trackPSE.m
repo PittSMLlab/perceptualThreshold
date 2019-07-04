@@ -1,6 +1,7 @@
 %%
 %addpath(genpath('../src/datlogManipulation/'))
 %%
+clear all
  addpath(genpath('../'))
 dataDir='../data/';
 subList=dir([dataDir 'AB*']);
@@ -103,14 +104,14 @@ bis=rsp.Coefficients.Estimate(2)
 %From remaining trials, estimate a distribution p(left| \Delta V)
 %We'll assume that p(left|\DeltaV) really is p(left|\Delta V - PSE), only
 input=[v];
-obsTimes=find(isnan(input(2:end)) & ~isnan(input(1:end-1)));
 range=[-500:10:500];
 %range=[-300:6:300];
-dataUsed=2;
+for dataUsed=1:2
+
 switch dataUsed
     case 1
         obs=discretizeObs(allData.initialResponse==1,2,[0,1]);
-        %bias=0;
+        bias=0;
         %sigma=75/1.1; %Realistic based on group-level analysis of responses. These numbers are from the static task. Do they match the dynamic one?
         p=1./(1+exp((range+bias)/sigma));
         pObsGivenState=[p;1-p];
@@ -118,13 +119,13 @@ switch dataUsed
         oRange=[0 1];
     case 2
         obs=discretizeObs(allData.lastSpeedDiff,length(range),[min(range) max(range)]); %Same range
-        sig=50; %the RMSE from the static study fits
         O=@(u) exp(-(range'-range).^2/(2*sig^2)); %Presuming that lastSpeedDiff is an unbiased estimator of PSE
         O=@(u) exp(-(range'-range-bis*(u-range)).^2/(2*sig^2)); % 35% undercorrection, derived from base 
         oRange=range;
 end
-obsTimes=repmat(obsTimes,10,1);
 
+obsTimes=find(isnan(input(2:end)) & ~isnan(input(1:end-1)));
+obsTimes=repmat(obsTimes,10,1);
 %Remove nan responses:
 obs=obs(~isnan(allData.reactionTime));
 obsTimes=obsTimes(~isnan(allData.reactionTime));
@@ -132,7 +133,7 @@ obsTimes=obsTimes(~isnan(allData.reactionTime));
 
 N=length(input);
 %We'll assume some arbitrary transition matrices p(x_{k+1}|x_{k},u_{k}), which
-s=10;
+s=7;
 T=@(u) exp(-(range'-range).^2./(2*s^2));
 pStateInitial=ones(size(range'))/numel(range);
 N=length(input);
@@ -145,7 +146,8 @@ N=length(input);
 %Viz:
 [fh] = vizHMMInference(pSmoothed,T(0),O(0),obs,obsTimes,range,oRange,1:N);
 %[fh] = vizHMMInference(pUpdated,T(0),O(0),obs,obsTimes,range,oRange,1:N);
-
+fh.Units='Pixels';
+fh.InnerPosition=[500 300 300*3 2*300];
 %Add adapt/post separation\
 ph=findobj(fh,'Type','Axes');
 axes(ph(2))
@@ -166,9 +168,30 @@ end
 if dataUsed==1
     axes(ph(1))
     fg=findgroups(obsTimes);
-   aux=splitapply(@(x) nanmean(x),obs,fg);
+   aux=splitapply(@(x) nanmean(x),oRange(obs)',fg);
    aux2=splitapply(@(x) nanmean(x),obsTimes,fg);
    scatter(aux2,aux,'filled')
+   ph(3).YAxis.Label.String='choice';
+   ph(3).YAxis.TickValues=[0 1];
+   ph(3).YAxis.TickLabels={'right','left'};
+else
+   axes(ph(1))
+   fg=findgroups(obsTimes);
+   aux=splitapply(@(x) nanmean(x),oRange(obs)',fg);
+   aux2=splitapply(@(x) nanmean(x),obsTimes,fg);
+   scatter(aux2,aux,'filled')
+   ph(3).YAxis.Label.String='reported PSE (mm/s)';
+end
+ph(2).YAxis.Limits=[-100 500];
+ph(1).YAxis.Limits=[-100 500];
+ph(3).Title.String='emission probabilities';
+ph(4).Title.String='transition probabilities';
+ph(3).XAxis.Label.String='PSE - \Delta V (mm/s)';
+ph(4).XAxis.Label.String='current PSE (mm/s)';
+ph(4).YAxis.Label.String='next PSE (mm/s)';
+ph(2).YAxis.Label.String='estimated PSE (mm/s)';
+ph(2).XAxis.Label.String='strides';
+set(ph,'CLim',[0 .3]) 
 end
 %% The real deal:
 %Get table with responses, generate observation vectors
