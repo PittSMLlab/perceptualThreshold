@@ -1,5 +1,6 @@
 %%
 %addpath(genpath('../src/datlogManipulation/'))
+addpath('../../ext/altmany-export_fig-b1a7288/')
 %%
 clear all
  addpath(genpath('../'))
@@ -106,7 +107,7 @@ bis=rsp.Coefficients.Estimate(2)
 input=[v];
 range=[-500:10:500];
 %range=[-300:6:300];
-for dataUsed=1:2
+for dataUsed=2%:2
 
 switch dataUsed
     case 1
@@ -147,7 +148,7 @@ N=length(input);
 [fh] = vizHMMInference(pSmoothed,T(0),O(0),obs,obsTimes,range,oRange,1:N);
 %[fh] = vizHMMInference(pUpdated,T(0),O(0),obs,obsTimes,range,oRange,1:N);
 fh.Units='Pixels';
-fh.InnerPosition=[500 300 300*3 2*300];
+fh.InnerPosition=[500 300 300*2 2.3*300];
 %Add adapt/post separation\
 ph=findobj(fh,'Type','Axes');
 axes(ph(2))
@@ -191,8 +192,16 @@ ph(4).XAxis.Label.String='current PSE (mm/s)';
 ph(4).YAxis.Label.String='next PSE (mm/s)';
 ph(2).YAxis.Label.String='estimated PSE (mm/s)';
 ph(2).XAxis.Label.String='strides';
-set(ph,'CLim',[0 .3]) 
+ph(2).Title.String='PSE estimates';
+set(ph,'FontSize',10,'FontName','OpenSans')
+%set(ph,'CLim',[0 .3]) 
+if dataUsed==1
+    export_fig ../fig/trackPSE_2AFC.png -png -c[0 5 0 5] -transparent -r600
+else
+    export_fig ../fig/trackPSE_speed.png -png -c[0 5 0 5] -transparent -r600
 end
+end
+
 %% The real deal:
 %Get table with responses, generate observation vectors
 
