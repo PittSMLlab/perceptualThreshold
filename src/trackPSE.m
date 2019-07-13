@@ -107,7 +107,7 @@ bis=rsp.Coefficients.Estimate(2)
 input=[v];
 range=[-500:10:500];
 %range=[-300:6:300];
-for dataUsed=2%:2
+for dataUsed=1:2
 
 switch dataUsed
     case 1
@@ -130,6 +130,7 @@ obsTimes=repmat(obsTimes,10,1);
 %Remove nan responses:
 obs=obs(~isnan(allData.reactionTime));
 obsTimes=obsTimes(~isnan(allData.reactionTime));
+perSize=allData.pertSize(~isnan(allData.reactionTime));
 
 
 N=length(input);
@@ -166,32 +167,46 @@ grid on
 if dataUsed==2 %Add viterbi sequence
 %plot(1:N,range(optSeq),'r')
 end
+axes(ph(1))
+hold off
+fg=findgroups(obsTimes);
+aux=splitapply(@(x) nanmean(x),oRange(obs)',fg);
+aux2=splitapply(@(x) nanmean(x),obsTimes,fg);
+ps=splitapply(@(x) nanmean(x),perSize,fg);
+ss=scatter(aux2(ps==400),aux(ps==400),'filled','DisplayName','\Delta V=400 mm/s');
+   ss.CData=.7*ss.CData;
+   hold on
+   scatter(aux2(ps==200),aux(ps==200),'filled','DisplayName','\Delta V=200 mm/s','CData',ss.CData*.7 +.3*[1 1 1]);
+   scatter(aux2(ps==100),aux(ps==100),'filled','DisplayName','\Delta V=100 mm/s','CData',ss.CData*.3 +.7*[1 1 1])
+     ph(1).Position(3)=ph(2).Position(3);
+   ph(1).XAxis.Limits=ph(2).XAxis.Limits;
+   title('observations')
+      legend('Location','NorthWest','AutoUpdate','off')
 if dataUsed==1
-    axes(ph(1))
-    fg=findgroups(obsTimes);
-   aux=splitapply(@(x) nanmean(x),oRange(obs)',fg);
-   aux2=splitapply(@(x) nanmean(x),obsTimes,fg);
-   scatter(aux2,aux,'filled')
    ph(3).YAxis.Label.String='choice';
    ph(3).YAxis.TickValues=[0 1];
+   ph(1).YAxis.Limits=[0 1];
    ph(3).YAxis.TickLabels={'right','left'};
+   ylabel('% of right choices')
 else
-   axes(ph(1))
-   fg=findgroups(obsTimes);
-   aux=splitapply(@(x) nanmean(x),oRange(obs)',fg);
-   aux2=splitapply(@(x) nanmean(x),obsTimes,fg);
-   scatter(aux2,aux,'filled')
    ph(3).YAxis.Label.String='reported PSE (mm/s)';
+   ph(1).YAxis.Label.String='avg. reported PSE (mm/s)';
+   ph(1).YAxis.Limits=[-100 500];
 end
+plot(888*[1 1],500*[1 -1],'k')
+%plot(858*[1 1],500*[1 -1],'Color',.5*ones(1,3)) %Last measurement of base
+%plot(903*[1 1],500*[1 -1],'Color',.5*ones(1,3)) %First of A
+plot(1793*[1 1],500*[1 -1],'k')
 ph(2).YAxis.Limits=[-100 500];
-ph(1).YAxis.Limits=[-100 500];
+ph(1).XAxis.TickValues=ph(2).XAxis.TickValues;
+ph(1).XTickLabels={};
 ph(3).Title.String='emission probabilities';
 ph(4).Title.String='transition probabilities';
 ph(3).XAxis.Label.String='PSE - \Delta V (mm/s)';
 ph(4).XAxis.Label.String='current PSE (mm/s)';
 ph(4).YAxis.Label.String='next PSE (mm/s)';
 ph(2).YAxis.Label.String='estimated PSE (mm/s)';
-ph(2).XAxis.Label.String='strides';
+ph(1).XAxis.Label.String='strides';
 ph(2).Title.String='PSE estimates';
 set(ph,'FontSize',10,'FontName','OpenSans')
 %set(ph,'CLim',[0 .3]) 
