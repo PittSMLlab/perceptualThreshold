@@ -68,5 +68,10 @@ for i=1:length(ph)
     ph(i).XAxis.FontSize=10;
     ph(i).YAxis.FontSize=10;
 end
+close(f2)
 %saveFig_(f1,'../fig/allstatic/',['EZfit'],0)
-export_fig ../fig/allstatic/EZfit.png -png -c[0 5 0 5] -transparent -r600
+export_fig ../fig/allstatic/EZfit.png -png  -transparent -r600
+cc=get(ph(1),'ColorOrder');
+ll=findobj(f1,'Type','Line','Color',cc(1,:));
+delete(ll)
+export_fig ../fig/allstatic/EZfitBis.png -png  -transparent -r600

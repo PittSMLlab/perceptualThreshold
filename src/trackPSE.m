@@ -100,14 +100,14 @@ sig=std(err)
 bis=rsp.Coefficients.Estimate(2)
 
 
-%% Laundry list:
+%%
 %From baseline data: drop non-responses(?)
 %From remaining trials, estimate a distribution p(left| \Delta V)
 %We'll assume that p(left|\DeltaV) really is p(left|\Delta V - PSE), only
 input=[v];
-range=[-500:10:500];
+range=[-500:2:500];
 %range=[-300:6:300];
-for dataUsed=1:2
+for dataUsed=2%1:2
 
 switch dataUsed
     case 1
@@ -149,7 +149,7 @@ N=length(input);
 [fh] = vizHMMInference(pSmoothed,T(0),O(0),obs,obsTimes,range,oRange,1:N);
 %[fh] = vizHMMInference(pUpdated,T(0),O(0),obs,obsTimes,range,oRange,1:N);
 fh.Units='Pixels';
-fh.InnerPosition=[500 300 300*2 2.3*300];
+fh.InnerPosition=[500 300 300*2 2*300];
 %Add adapt/post separation\
 ph=findobj(fh,'Type','Axes');
 axes(ph(2))
@@ -176,9 +176,9 @@ ps=splitapply(@(x) nanmean(x),perSize,fg);
 ss=scatter(aux2(ps==400),aux(ps==400),'filled','DisplayName','\Delta V=400 mm/s');
    ss.CData=.7*ss.CData;
    hold on
-   scatter(aux2(ps==200),aux(ps==200),'filled','DisplayName','\Delta V=200 mm/s','CData',ss.CData*.7 +.3*[1 1 1]);
-   scatter(aux2(ps==100),aux(ps==100),'filled','DisplayName','\Delta V=100 mm/s','CData',ss.CData*.3 +.7*[1 1 1])
-     ph(1).Position(3)=ph(2).Position(3);
+   scatter(aux2(ps==200),aux(ps==200),'filled','DisplayName','\Delta V=200 mm/s','CData',ss.CData*.5 +.5*[1 1 1]);
+   scatter(aux2(ps==100),aux(ps==100),'filled','DisplayName','\Delta V=100 mm/s','CData',ss.CData*.15 +.85*[1 1 1],'MarkerEdgeColor',ss.CData)
+   ph(1).Position(3)=ph(2).Position(3);
    ph(1).XAxis.Limits=ph(2).XAxis.Limits;
    title('observations')
       legend('Location','NorthWest','AutoUpdate','off')
@@ -187,17 +187,26 @@ if dataUsed==1
    ph(3).YAxis.TickValues=[0 1];
    ph(1).YAxis.Limits=[0 1];
    ph(3).YAxis.TickLabels={'right','left'};
-   ylabel('% of right choices')
+   ylabel({'% of right'; 'side choices'})
+   axes(ph(1))
+  rr=rectangle('Position',[885 0 900 1],'LineWidth',2);
+  uistack(rr,'bottom')
 else
    ph(3).YAxis.Label.String='reported PSE (mm/s)';
-   ph(1).YAxis.Label.String='avg. reported PSE (mm/s)';
-   ph(1).YAxis.Limits=[-100 500];
+   ph(1).YAxis.Label.String={'avg. reported'; 'PSE (mm/s)'};
+   ph(1).YAxis.Limits=[-50 450];
+   %for k=[400,200,100]; %Add errorbars
+   % errorbar(aux2(ps==k),aux(ps==k),);
+   %end
+   axes(ph(1))
+   rr=rectangle('Position',[885 -50 900 500],'LineWidth',2);
+   uistack(rr,'bottom')
 end
 plot(888*[1 1],500*[1 -1],'k')
 %plot(858*[1 1],500*[1 -1],'Color',.5*ones(1,3)) %Last measurement of base
 %plot(903*[1 1],500*[1 -1],'Color',.5*ones(1,3)) %First of A
 plot(1793*[1 1],500*[1 -1],'k')
-ph(2).YAxis.Limits=[-100 500];
+ph(2).YAxis.Limits=[-100 450];
 ph(1).XAxis.TickValues=ph(2).XAxis.TickValues;
 ph(1).XTickLabels={};
 ph(3).Title.String='emission probabilities';
@@ -205,9 +214,31 @@ ph(4).Title.String='transition probabilities';
 ph(3).XAxis.Label.String='PSE - \Delta V (mm/s)';
 ph(4).XAxis.Label.String='current PSE (mm/s)';
 ph(4).YAxis.Label.String='next PSE (mm/s)';
-ph(2).YAxis.Label.String='estimated PSE (mm/s)';
+ph(2).YAxis.Label.String={'estimated';'PSE (mm/s)'};
 ph(1).XAxis.Label.String='strides';
-ph(2).Title.String='PSE estimates';
+ph(2).Title.String='PSE estimates (probability density)';
+ll=findobj(ph(2),'Type','Line','Color',[0 0 0]);
+set(ll(end),'DisplayName','MLE')
+axes(ph(2))
+legend(ll(end))
+ph(1).Title.String='avg. observation';
+ph(1).Position(1)=.12;
+ph(1).Position(4)=.22;
+ph(2).Position(4)=.22;
+ph(2).Position(1)=.12;
+ph(3).Position(1)=.6;
+ph(1).Position(3)=ph(2).Position(3);
+vizRange=300*[-1 1];
+ph(4).XAxis.Limits=vizRange;
+ph(3).XAxis.Limits=vizRange;
+ph(4).YAxis.Limits=vizRange;
+ph(4).CLim=[0 .15];
+ph(1).Position(2)=.05;
+for jj=1:4
+    ph(jj).Title.FontWeight='normal';
+end
+axes(ph(2))
+rectangle('Position',[885 -100 900 550],'LineWidth',2)
 set(ph,'FontSize',10,'FontName','OpenSans')
 %set(ph,'CLim',[0 .3]) 
 if dataUsed==1

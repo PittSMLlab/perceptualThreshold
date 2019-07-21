@@ -80,4 +80,4 @@ ph.XAxis.FontSize=12;
 ph.YAxis.FontSize=12;
 %saveFig_(gcf,'../../fig/','PerceptutalTask',0)
 %export_fig ../../fig/perceptualTask.png -png -c[0 5 0 5] -transparent -r600
-export_fig ../../fig/perceptualTaskBis.png -png -c[0 5 0 5] -transparent -r600
+export_fig ../../fig/perceptualTaskBis.png -png -transparent -r600
