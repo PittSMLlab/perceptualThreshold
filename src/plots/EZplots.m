@@ -13,54 +13,53 @@ sA=t73A/(noiseA.^2).^(1/alphaA);
 aA=accFactor(pSize,biasA,sA,alphaA,noiseA);
 tA=delayA+rtFactor(pSize,biasA,sA,alphaA,noiseA);
 
-%Individual models:
-Nsubs=9;
-aAll=0;
-tAll=0;
-aAll2=0;
-tAll2=0;
-aAll3=0;
-tAll3=0;
-for i=1:Nsubs
-    aux=superSuperT(superSuperT.subID==i,:); %Single subj
-    [pSize,driftRate(i,:),noise(i),delay(i),bias(i),t73(i),alpha(i)]=fitEZ_mine(aux,'RT');
-    a=accFactor(pSize,bias(i),t73(i),alpha(i),noise(i));
-    aAll=aAll+a;
-    t=delay(i)+rtFactor(pSize,bias(i),t73(i),alpha(i),noise(i));
-    tAll=tAll+t;
-    difficulty(i,:)=driftRate(i,:)/noise(i)^2; 
-    %Add: estimate a 'mixing' param given the true, vs. the estimated
-    %accuracies.
-    
-    [pSize,driftRate2(i,:),noise2(i),delay2(i),bias2(i),t732(i),alpha2(i)]=fitEZ_mine(aux,'acc');
-    a2=accFactor(pSize,bias2(i),t732(i),alpha2(i),noise2(i));
-    aAll2=aAll2+a2;
-    t2=delay2(i)+rtFactor(pSize,bias2(i),t732(i),alpha2(i),noise2(i));
-    tAll2=tAll2+t2;
-    difficulty2(i,:)=driftRate2(i,:)/noise2(i)^2; 
-    
-    [pSize,driftRate3(i,:),noise3(i),delay3(i),bias3(i),t733(i),alpha3(i),mix3(i)]=fitEZ_mine(aux,'RTalt');
-    a3=accFactor(pSize,bias(i),t73(i),alpha(i),noise(i));
-    a3=(1-mix3(i))*a + mix3(i)*(1-a);
-    aAll3=aAll3+a3;
-    t3=delay(i)+rtFactor(pSize,bias3(i),t733(i),alpha3(i),noise3(i));
-    tAll3=tAll3+t3;
-    difficulty3(i,:)=driftRate3(i,:)/noise3(i)^2; 
-end
-aAll=aAll/Nsubs;
-tAll=tAll/Nsubs;
-aAll2=aAll2/Nsubs;
-tAll2=tAll2/Nsubs;
-aAll3=aAll3/Nsubs;
-tAll3=tAll3/Nsubs;
-
 %All in a single plot:
 f1=figure('Units','pixels','InnerPosition',[100 100 2*300 2*300]);
 set(gcf,'Colormap',unsignedMap)
 sSize=40;
+
+%Individual model fits:
+Nsubs=9;
+fitMode={'RT','acc','mixed'};
+for j=1:length(fitMode) %Different fitting modes
+    clear noise aAll tAll driftRate delay bias t73 alpha
+    aAll=0;
+    tAll=0;
+    for i=1:Nsubs
+        aux=superSuperT(superSuperT.subID==i,:); %Single subj
+        [pSize,driftRate(i,:),noise(i,:),delay(i),bias(i),t73(i),alpha(i)]=fitEZ_mine(aux,fitMode{j});
+        a=accFactor(pSize,bias(i),t73(i),alpha(i),noise(i,:));
+        aAll=aAll+a;
+        t=delay(i)+rtFactor(pSize,bias(i),t73(i),alpha(i),noise(i,:)');
+        tAll=tAll+t;
+        difficulty(i,:)=driftRate(i,:)./noise(i,:).^2; 
+        %Add: estimate a 'mixing' param given the true, vs. the estimated
+        %accuracies.
+    end
+    aAll=aAll/Nsubs;
+    tAll=tAll/Nsubs;
+    
+    subplot(2,2,1)
+    hold on
+    plot(pSize,aAll,'LineWidth',2,'DisplayName',[fitMode{j} ' fitted']);
+
+    subplot(2,2,2)
+    hold on
+    plot(pSize,tAll,'LineWidth',2,'DisplayName',[fitMode{j} ' fitted'])
+ 
+    subplot(2,2,3)
+    hold on
+    plot(aAll,tAll,'LineWidth',2,'DisplayName',[fitMode{j} ' fitted'])
+    
+    subplot(2,2,4)
+    hold on
+    plot(pSize,mean(difficulty,1),'LineWidth',2,'DisplayName',[fitMode{j} ' fitted'])
+
+end
+
+%Then plot data:
 subplot(2,2,1)
 hold on
-%set(gca,'Colormap',cmap)
 G=findgroups(abs(superSuperT.pertSize));
 superSuperT.cr=double(superSuperT.initialResponse==-sign(superSuperT.pertSize));
 superSuperT.cr(isnan(superSuperT.initialResponse))=nan;
@@ -68,47 +67,40 @@ acc=splitapply(@(x) nanmean(x),superSuperT.cr,G);
 eacc=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.cr,G);
 acc(1)=.5;
 ss=scatter(pSize,acc,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','group data'); %all data
-p1=plot(pSize,aAll2,'k','LineWidth',2,'DisplayName','acc. fitted');
-p2=plot(pSize,aAll,'LineWidth',2,'DisplayName','RT fitted');
-%p3=plot(pSize,aAll3,'LineWidth',2,'DisplayName','RTalt fitted');
 errorbar(pSize,acc,eacc,'k','LineStyle','none')
 xlabel('|probe size| (mm/s)')
 ylabel('% correct')
-legend([ss,p1,p2],'Location','SouthEast','Box','off')
+legend('Location','SouthEast','Box','off')
 set(gca,'YLim',[.5 1.01])
 uistack(ss,'top')
-subplot(2,2,2)
+
+ subplot(2,2,2)
 hold on
 rt=splitapply(@(x) nanmean(x),superSuperT.reactionTime,G);
 ert=splitapply(@(x) nanstd(x)/sqrt(sum(~isnan(x))),superSuperT.reactionTime,G);
 ss=scatter(pSize,rt,sSize,pSize,'filled','MarkerEdgeColor','w'); %all data
-plot(pSize,tAll2,'k','LineWidth',2,'DisplayName','acc. fitted')
-plot(pSize,tAll,'LineWidth',2,'DisplayName','RT fitted')
-%plot(pSize,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
 errorbar(pSize,rt,ert,'k','LineStyle','none')
 xlabel('|probe size| (mm/s)')
 ylabel('mean RT (s)')
 set(gca,'YLim',[0 7])
 uistack(ss,'top')
+
 subplot(2,2,3)
 hold on
 ss=scatter(acc,rt,sSize,pSize,'filled','MarkerEdgeColor','w','DisplayName','group data'); %all data
-plot(aAll2,tAll2,'k','LineWidth',2,'DisplayName','acc. fitted')
-plot(aAll,tAll,'LineWidth',2,'DisplayName','RT fitted')
-%plot(aAll3,tAll3,'LineWidth',2,'DisplayName','RTalt fitted');
 errorbar(acc,rt,ert,'k','LineStyle','none')
 errorbar(acc,rt,eacc,'Horizontal','k','LineStyle','none')
 xlabel('% correct')
 ylabel('mean RT (s)')
-%axis tight
 uistack(ss,'top')
 set(gca,'XLim',[.5 1.01],'YLim',[0 7])
+
 subplot(2,2,4)
 hold on
-plot(pSize,mean(difficulty2,1),'k','LineWidth',2,'DisplayName','Acc fitted')
-plot(pSize,mean(difficulty,1),'LineWidth',2,'DisplayName','Acc fitted')
 xlabel('|probe size| (mm/s)')
 ylabel('difficulty^{-1}')
+
+
 %% Alt EZ modeling:
 Nsubs=9;
 f2=figure('Name','Analysis of choice-fitted indiv. models'); hold on; 

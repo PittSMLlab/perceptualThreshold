@@ -19,7 +19,7 @@ end
 figure(f1)
 %export_fig ../fig/allstatic/acc.eps -eps -c[0 5 0 5] -transparent -m2 -r600 -depsc
 close(f2)
-export_fig ../fig/allstatic/acc.png -png -c[0 5 0 5] -transparent -r600
+%export_fig ../fig/allstatic/acc.png -png -c[0 5 0 5] -transparent -r600
 
 
 %%
@@ -36,7 +36,7 @@ close(f1)
 %saveFig_(f2,'../fig/allstatic/',['subjectEffects'],0)
 figure(f2)
 %export_fig ../fig/allstatic/subjectEffects.eps -eps -c[0 5 0 5] -transparent -r600 -depsc
-export_fig ../fig/allstatic/subjectEffects.png -png -c[0 5 0 5] -transparent -r600
+%export_fig ../fig/allstatic/subjectEffects.png -png -c[0 5 0 5] -transparent -r600
 %%
 %All subjects:
 [fh,f2]=rtPlots(superSuperT);
@@ -57,7 +57,7 @@ for i=1:length(ph)
     ph(i).Position([2,4])=[.16 .74];
 end
 %saveFig_(fh,'../fig/allstatic/',['ssAll'],0)
-export_fig ../fig/allstatic/ssAll.png -png -c[0 5 0 5] -transparent -r600
+%export_fig ../fig/allstatic/ssAll.png -png -c[0 5 0 5] -transparent -r600
 
 %% EZ modeling
 [f1,f2] = EZplots(superSuperT);
@@ -68,10 +68,11 @@ for i=1:length(ph)
     ph(i).XAxis.FontSize=10;
     ph(i).YAxis.FontSize=10;
 end
-close(f2)
+%close(f2)
 %saveFig_(f1,'../fig/allstatic/',['EZfit'],0)
-export_fig ../fig/allstatic/EZfit.png -png  -transparent -r600
-cc=get(ph(1),'ColorOrder');
-ll=findobj(f1,'Type','Line','Color',cc(1,:));
-delete(ll)
-export_fig ../fig/allstatic/EZfitBis.png -png  -transparent -r600
+%export_fig ../fig/allstatic/EZfit.png -png  -transparent -r600
+%cc=get(ph(1),'ColorOrder');
+%ll=findobj(f1,'Type','Line','Color',cc(1,:));
+%delete(ll)
+%export_fig ../fig/allstatic/EZfitBis.png -png  -transparent -r600
+%% Alt EZ Modeling

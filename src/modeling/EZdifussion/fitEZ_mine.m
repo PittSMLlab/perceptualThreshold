@@ -95,7 +95,7 @@ switch method
         
     case 'acc' %Fits difficulty rates to accuracy, delay and noise to mean RT
         %Fit glm to get MLE psychometric, this returns 
-        if noAlpha %This is easy
+        if noAlpha %This is easy: linear relation between stimulus size and difficulty
             alpha=1;
             if noBias
                 bias=0;
@@ -115,9 +115,16 @@ switch method
         params=lsqnonlin(@(x) x(1)+rtFactor(pSize,bias,t73,alpha,x(2)) -MRT ,x0(1:2),lb(1:2),ub(1:2));
         delay=params(1);
         noise=params(2);
+    case 'mixed' %Same as fitting acc, but with variable noise (noise follows a power-law on pSize)
+        %First, fit acc:
+        [pSize,driftRate,~,~,bias,t73,alpha,mix]=fitEZ_mine(dataTable,'acc');
+        %Then, fit RT with a variable noise model:
+        params=lsqnonlin(@(x) x(1)+rtFactor(pSize,bias,t73,alpha,x(2)*(1+x(3)*abs(pSize).^x(4))) -MRT ,[1 .2 .01 1],[lb(1:2) 0 -Inf],[ub(1:2) Inf Inf]);
+        delay=params(1);
+        noise=params(2)*(1+params(3)*abs(pSize).^params(4));
 end
-driftRate=nl(pSize,bias,t73,alpha);
-
+difficulty=nl(pSize,bias,t73,alpha);
+driftRate=difficulty.*noise.^2;
 % %Diagnostics plots:
 % difficulty=dif(pSize,bias,scale,alpha,noise);
 % accuracy=accFactor(pSize,bias,scale,alpha,noise);
