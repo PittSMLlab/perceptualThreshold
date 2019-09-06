@@ -119,9 +119,18 @@ switch method
         %First, fit acc:
         [pSize,driftRate,~,~,bias,t73,alpha,mix]=fitEZ_mine(dataTable,'acc');
         %Then, fit RT with a variable noise model:
-        params=lsqnonlin(@(x) x(1)+rtFactor(pSize,bias,t73,alpha,x(2)*(1+x(3)*abs(pSize).^x(4))) -MRT ,[1 .2 .01 1],[lb(1:2) 0 -Inf],[ub(1:2) Inf Inf]);
+        l=[lb(1:2) 0 -Inf];
+        u=[ub(1:2) Inf Inf];
+        l=[lb(1:2) 0 2];
+        u=[ub(1:2) Inf 2];
+        opts=optimoptions('lsqnonlin','MaxFunctionEvaluations',2e3);
+        params=lsqnonlin(@(x) x(1)+rtFactor(pSize,bias,t73,alpha,sqrt(x(2)*(1+x(3)*abs(pSize/1050).^x(4)))) -MRT ,[1 .2 .01 l(4)],l,u,opts);
         delay=params(1);
-        noise=params(2)*(1+params(3)*abs(pSize).^params(4));
+        noise=sqrt(params(2)*(1+params(3)*abs(pSize/1050).^params(4)));
+        exponent=params(4)
+        coef=params(3)
+    case 'TIED' %Fitting assuming power-law coding as derived in "The mechanistic foundation of Weber's law"
+        
 end
 difficulty=nl(pSize,bias,t73,alpha);
 driftRate=difficulty.*noise.^2;

@@ -198,5 +198,4 @@ for i=1:Nsubs
         xlabel('probe size (mm/s)')
     end
 end
-end
 
