@@ -68,9 +68,15 @@ for i=1:length(ph)
     ph(i).XAxis.FontSize=10;
     ph(i).YAxis.FontSize=10;
 end
-%close(f2)
+close(f2)
+lg=findobj(f1,'Type','Line');
+lg(end).DisplayName='DDM fit';
+ss=findobj('Type','scatter');
+set(ss,'CData',[0 0 0],'DisplayName','group avg.');
+lg=findobj(f1,'Type','Legend');
+lg.String{2}='\pm ste';
 %saveFig_(f1,'../fig/allstatic/',['EZfit'],0)
-%export_fig ../fig/allstatic/EZfit.png -png  -transparent -r600
+export_fig ../fig/allstatic/EZfitMLMC.png -png  -transparent -r600
 %cc=get(ph(1),'ColorOrder');
 %ll=findobj(f1,'Type','Line','Color',cc(1,:));
 %delete(ll)

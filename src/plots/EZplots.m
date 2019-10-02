@@ -21,7 +21,7 @@ sSize=40;
 %Individual model fits:
 Nsubs=9;
 fitMode={'RT','acc','mixed'};
-for j=1:length(fitMode) %Different fitting modes
+for j=3%1:length(fitMode) %Different fitting modes
     clear noise aAll tAll driftRate delay bias t73 alpha
     aAll=0;
     tAll=0;

@@ -107,7 +107,7 @@ bis=rsp.Coefficients.Estimate(2)
 input=[v];
 range=[-500:2:500];
 %range=[-300:6:300];
-for dataUsed=2%1:2
+for dataUsed=1%1:2
 
 switch dataUsed
     case 1
@@ -241,10 +241,38 @@ axes(ph(2))
 rectangle('Position',[885 -100 900 550],'LineWidth',2)
 set(ph,'FontSize',10,'FontName','OpenSans')
 %set(ph,'CLim',[0 .3]) 
+%Replace top panels with protocol (for MLMC)
+f0=gcf;
+f1=openfig('./plots/.fig/dynamicBlocks.fig');
+p0=copyobj(findobj(f1,'Type','Axes'),f0);
+p0.Position=ph(4).Position;
+p0.Position([1,3])=ph(1).Position([1,3]);
+delete(ph([3,4]))
+p0.XLabel.String='';
+%p0.XTick=ph(1).XTick;
+p0.XTickLabel={};
+p0.YLabel.String={'belt speed';'difference (mm/s)'};
+p0.Title.FontWeight='normal';
+p0.Title.String='perception adaptation dynamics protocol';
+aux=p0.YLabel.Position;
+p0.YAxisLocation='right';
+p0.YLabel.Position=aux;
+aux=ph(1).YLabel.Position;
+ph(1).YAxisLocation='right';
+ph(1).YLabel.Position=aux+[-100 0 0];
+ph(2).XGrid='off';
+ph(1).Legend.String={'\Delta V = +400 mm/s','\Delta V = +200 mm/s','\Delta V = +100 mm/s'};
+axes(ph(1))
+s=findobj(gca,'Type','Scatter');
+ph(1).Legend.AutoUpdate='off';
+for i=1:length(s)
+e=errorbar(s(i).XData,s(i).YData,sqrt(s(i).YData.*(1-s(i).YData))/sqrt(10),'Color','k','LineStyle','none');
+uistack(e,'bottom')
+end
 if dataUsed==1
-    export_fig ../fig/trackPSE_2AFC.png -png -c[0 5 0 5] -transparent -r600
+    export_fig ../fig/trackPSE_2AFC_MLMC_wErr.png -png -c[0 5 0 5] -transparent -r600
 else
-    export_fig ../fig/trackPSE_speed.png -png -c[0 5 0 5] -transparent -r600
+    %export_fig ../fig/trackPSE_speed.png -png -c[0 5 0 5] -transparent -r600
 end
 end
 

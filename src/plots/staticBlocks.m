@@ -25,11 +25,11 @@ lg=legend([p1 pp p2],'Location','North');
 lg.Position(1)=lg.Position(1)+.07;
 ylabel('belt speed difference (mm/s)')
 xlabel('stride cycles')
-title('test block (odd)')
+title('test block')
 set(gca,'FontSize',10)
 ph=gca;
 ph.XAxis.FontSize=12;
 ph.YAxis.FontSize=12;
 ph.Position(1)=ph.Position(1)+.03;
 %saveFig_(fh,'../../fig/','staticProtocol',0)
-export_fig ../../fig/staticBlock.png -png -c[0 5 0 5] -transparent -r600
+export_fig ../../fig/staticBlockMLMC.png -png -c[0 5 0 5] -transparent -r600

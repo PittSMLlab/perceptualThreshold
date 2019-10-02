@@ -23,10 +23,10 @@ eet=[eetb; eetb+length(vLb)+breakSize; eeta+2*length(vLb)+2*breakSize; eetp+2*le
 pps=[pS; pS; pSa; pSp];
 
 v=[vRb-vLb; nan(breakSize,1); vRb-vLb; nan(breakSize,1); vR-vL; nan(breakSize,1); vRp-vLp];
-v=[zeros(size(vRb-vLb)); zeros(breakSize,1); zeros(size(vRb-vLb)); zeros(breakSize,1); [0; 500*ones(size(vR-vL,1)-2,1); 0]; zeros(breakSize,1); zeros(size(vRp-vLp))];
+%v=[zeros(size(vRb-vLb)); zeros(breakSize,1); zeros(size(vRb-vLb)); zeros(breakSize,1); [0; 500*ones(size(vR-vL,1)-2,1); 0]; zeros(breakSize,1); zeros(size(vRp-vLp))];
 p1=plot(v,'LineWidth',2,'DisplayName','set speeds');
 hold on
-%p2=scatter(sst,pps,20,'filled','MarkerEdgeColor','w','DisplayName','probe start');
+p2=scatter(sst,pps,20,'filled','MarkerEdgeColor','w','DisplayName','probe start');
 for i=1:length(pps)
     pp=patch([sst(i) eet(i) eet(i) sst(i)],550*[-1 -1 1 1],.85*ones(1,3),'EdgeColor','none','FaceAlpha',.6,'DisplayName','task')
     uistack(pp,'bottom')
@@ -56,4 +56,4 @@ text(2100,400,{'washout'},'FontName',fName,'FontSize',fSize)
 %saveFig_(fh,'../../fig/','dynamicProtocol',0)
 %export_fig ../../fig/dynamicBlocksBis.png -png -c[0 5 0 5] -transparent -r600
 %export_fig ../../fig/dynamicBlocksBis1.png -png -c[0 5 0 5] -transparent -r600
-export_fig ../../fig/dynamicBlocksBis2.png -png -c[0 5 0 5] -transparent -r600
+%export_fig ../../fig/dynamicBlocksBis2.png -png -c[0 5 0 5] -transparent -r600
