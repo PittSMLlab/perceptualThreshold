@@ -107,7 +107,7 @@ bis=rsp.Coefficients.Estimate(2)
 input=[v];
 range=[-500:2:500];
 %range=[-300:6:300];
-for dataUsed=1%1:2
+for dataUsed=2%1:2
 
 switch dataUsed
     case 1
@@ -216,6 +216,8 @@ ph(4).XAxis.Label.String='current PSE (mm/s)';
 ph(4).YAxis.Label.String='next PSE (mm/s)';
 ph(2).YAxis.Label.String={'estimated';'PSE (mm/s)'};
 ph(1).XAxis.Label.String='strides';
+ph(2).XAxis.Label.String='strides';
+ph(3).XAxis.Label.String='strides';
 ph(2).Title.String='PSE estimates (probability density)';
 ll=findobj(ph(2),'Type','Line','Color',[0 0 0]);
 set(ll(end),'DisplayName','MLE')
@@ -248,7 +250,7 @@ p0=copyobj(findobj(f1,'Type','Axes'),f0);
 p0.Position=ph(4).Position;
 p0.Position([1,3])=ph(1).Position([1,3]);
 delete(ph([3,4]))
-p0.XLabel.String='';
+p0.XLabel.String='strides';
 %p0.XTick=ph(1).XTick;
 p0.XTickLabel={};
 p0.YLabel.String={'belt speed';'difference (mm/s)'};
@@ -270,9 +272,9 @@ e=errorbar(s(i).XData,s(i).YData,sqrt(s(i).YData.*(1-s(i).YData))/sqrt(10),'Colo
 uistack(e,'bottom')
 end
 if dataUsed==1
-    export_fig ../fig/trackPSE_2AFC_MLMC_wErr.png -png -c[0 5 0 5] -transparent -r600
+    %export_fig ../fig/trackPSE_2AFC_MLMC_wErr.png -png -c[0 5 0 5] -transparent -r600
 else
-    %export_fig ../fig/trackPSE_speed.png -png -c[0 5 0 5] -transparent -r600
+    export_fig ../fig/trackPSE_speed_fancy.png -png -c[0 5 0 5] -transparent -r600
 end
 end
 
